@@ -156,6 +156,10 @@
             <span>🔄</span>
             <span>重置</span>
           </button>
+          <button onclick="triggerDriveRescan()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-sky-600 hover:bg-sky-700 text-white shadow-sm transition cursor-pointer" title="通知 Google Drive 重新掃描最新幼童名單、ITP 及流程表">
+            <span>⚡</span>
+            <span>重掃 Drive 檔案</span>
+          </button>
         </div>
 
       </div>
@@ -933,996 +937,20 @@ function readDocText(file) {
 
   <!-- ================= APPLICATION JAVASCRIPT ================= -->
   <script>
-    const STORAGE_KEY = 'plk_students_v4';
-    const FLOWCHART_LOGS_KEY = 'plk_flowchart_logs_v4';
-    const GAS_SYNC_SETTINGS_KEY = 'plk_gas_sync_settings_v1';
-    // 基準參考年月：2026年11月
-    const REFERENCE_DATE = { year: 2026, month: 11, day: 9 };
+    // 👇 請將 Apps Script 部署出嚟嘅網頁應用程式網址 (.../exec) 貼入單引號內
+    const DEFAULT_GAS_URL = '請在此貼上你的Apps_Script_exec網址';
 
-    // 預載完整 35 位幼童真實資料庫（已同步《1. 傲翔計劃 - 學童資料2026-2027》及全部最新 ITP/IEP 檔案）
-    const DEFAULT_CHILDREN_DATA = [
-      // ==================== 組別一：方換 — 下年名單（共 15 人） ====================
-      {
-        id: 1,
-        name: '何卓謠',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2526/021',
-        dob: '2021-11-07',
-        className: '上低A',
-        teacher: '周侍箴老師',
-        tier: 'A',
-        mode: '入班/個別',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '發展遲緩／懷疑發展遲緩、口語輕度遲緩、小肌肉懷疑遲緩（Developmental Delay, Weakness in speech and fine motor, Suspected developmental delay, Oral Language Mild delay, Fine Motor Suspected delay）',
-        goals: {
-          認知: '能順數背誦1-20（口頭提示）；能認讀5-10（視覺提示）；能說出不同的形狀名稱，如︰圓形、三角形（口頭提示）',
-          語言: '能運用「人物+地方+活動」的三詞句表達，如：「媽媽喺廚房煮飯」（視覺提示）；能說出標示地點或空間關係的短語，如：擺襪喺籃度（口頭提示）；能正確讀出含舌根塞音/k-/(家)音的單字詞，如：「哥」、「雞」、「鏡」（觸體協助）；能在大牙位置咬實4號牙膠棒(左右各十五秒)',
-          小肌肉: '能用4至6條雪條棒仿砌簡單英文字母及中文字（口頭提示）；能抄寫部份英文字母，如：E、F、H、I、L、T（視覺提示）；能沿手掌畫線（視覺提示）',
-          自理: '能將鞋子穿在正確的腳上（視覺提示）；能自行拉拉鍊',
-          大肌肉: '能雙手接回彈地的8吋膠球(3次中2次)；能雙手手掌接著由5呎遠拋來的網球(3次中2次)',
-          社交情緒: '自己的要求未能被滿足時，願意忍耐或接受（視覺提示）；能與別人傾談有關過去或未來的事情，如：「頭先同媽咪去游水」、「聽日去邊？」（口頭提示）'
-        }
-      },
-      {
-        id: 2,
-        name: '李澄',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2627/025',
-        dob: '2022-05-30',
-        className: '上低A',
-        teacher: '周侍箴老師',
-        tier: 'A',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '目光接觸偏弱；說話較心急、組織較鬆散',
-        specialNeeds: '顯著語言困難、懷疑發展遲緩、口語顯著遲緩、小肌肉及大肌肉懷疑遲緩、專注力問題（無過度活躍）（Significant language difficulties / Suspected DD / Oral Significant delay / Fine motor suspected delay / Gross Motor Suspected Delay / attention problem without over activity）',
-        goals: {
-          語言: '能運用連接詞「首先、然後/跟住、最後」表達時序關係，如：「首先著衫，然後著襪，最後著鞋」（視覺提示）；能運用連接詞「如果⋯就⋯」表達條件關係，如：「如果哥哥落雨冇帶遮，哥哥就會濕哂」（視覺提示）；能明白3個步驟指令（視覺提示）',
-          社交情緒: '在熟悉話題下，能作適當的回應以保持簡單輪序對話2至3回，如：「我都鍾意呀」、「我屋企都有」、「我未試過」（口頭提示）；能按老師指示完成小差事，如：到接待處借取物品、協助老師派發功課；在成人指示下，能跟從簡單的遊戲規則，如：正確地輪序擲骰子、按骰子點數行棋（口頭提示）',
-          認知: '能指出四張剛見過的相片，如︰書、積木、微波爐等；能抄寫簡單中文字5個，如︰上、中、山、大、水；能把兩項物件分類，如︰交通工具、食物',
-          小肌肉: '能用鉛筆刨刨鉛筆；能沿1/4吋粗的線剪出直徑約4吋大的圓形；能將紙張對角摺成三角形',
-          自理: '能將鞋子穿在正確的腳上；能穿上外套',
-          大肌肉: '能單手下手拋網球至5呎遠2呎X2呎的目標(3次中2次)；能雙手手掌接著由5呎遠拋來的8吋膠球(3次中2次)；能雙腳同步跳過7吋高的障礙物，著地後仍能站穩'
-        }
-      },
-      {
-        id: 3,
-        name: '蘇予芯',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2627/063',
-        dob: '2022-06-14',
-        className: '上低A',
-        teacher: '周侍箴老師',
-        tier: 'A',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '⚠️ X拍照｜對話偏向被動，傾向使用短句',
-        specialNeeds: '顯著語言困難、懷疑發展遲緩、口語顯著遲緩（言語障礙：發音問題）、小肌肉及大肌肉懷疑遲緩（Significant language difficulties / suspected developmental delay / Oral significant delay (Speech Disorder: articulation problem) / Fine motor suspected delay, Gross motor suspected delay｜備註：X拍照）',
-        goals: {
-          語言: '能運用連接詞「首先、然後/跟住、最後」表達時序關係，如：「首先著衫，然後著襪，最後著鞋」（視覺提示）；能運用補語來擴充連動句表達，如：「男仔坐巴士去公園打波」（口頭提示）；能在大牙位置咬實4號牙膠棒(左右各十五秒)；能正確讀出含舌齒滑音/l-/(啦)音的單字詞，如：「拉」、「路」（視覺提示）',
-          社交情緒: '當別人要求澄清或解釋時，能嘗試調整或修改說話內容（口頭提示）；能主動分享日常生活體驗或喜好，如：「老師帶我去海洋公園，好好玩」（口頭提示）',
-          認知: '能順數背誦1至20；能說出物件名稱(日常生活用品)，如︰雨傘（口頭提示）；能說出不同的形狀名稱，如︰圓形、三角形',
-          小肌肉: '能用筆連點，畫一個正方形（口頭提示）；能於2厘米X 2厘米的方格內抄寫由直線+曲線組成的英文字母，如：A、T、B、D、G、S',
-          自理: '能自行拉拉鍊；能用筷子夾食物入口，三次有兩次成功',
-          大肌肉: '能雙腳同步跳過10吋高的障礙物，著地後仍能站穩；能雙手手掌接著由5呎遠拋來的8吋膠球(3次中2次)'
-        }
-      },
-      {
-        id: 4,
-        name: '陳諾彤',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2526/053',
-        dob: '2022-10-24',
-        className: '上低C',
-        teacher: '周樂敏老師',
-        tier: 'B',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '懷疑發展遲緩、輕度語言困難、小肌肉輕度遲緩、大肌肉懷疑遲緩（Suspected developmental delay, Mild Language Difficulties, Fine motor mild delay, gross motor Suspected delay）',
-        goals: {
-          語言: '能說出時序連接詞：首先、跟住、之後、然後、最後（口頭提示）；能依序排列三張程序圖卡，如：攞杯→倒水→飲水（口頭提示）；能在大牙位置咬實4號牙膠棒(左右各十五秒)；能正確讀出含舌齒塞音/t-/(打)的單字詞，如：「豆」、「蛋」（觸體協助）',
-          社交情緒: '能與別人傾談有關過去或未來的事情，如：「頭先同媽咪去游水」、「聽日去邊？」（視覺提示）；在成人指示下，能跟從簡單的遊戲規則，如：正確地輪序擲骰子、按骰子點數行棋（口頭提示）',
-          認知: '能認讀大楷字母咭A-Z（口頭提示）；能仿寫簡單中文字5個，如︰上、中、山、大、水（視覺提示）',
-          小肌肉: '能抄寫部份英文字母，如：E、F、H、I、L、T',
-          自理: '能用筷子扒食物入口，三次有兩次成功（視覺提示）',
-          大肌肉: '能垂手向後拉，並扭動上身，將網球拋向前10呎遠；能雙手手掌接著由5呎遠拋來的8吋膠球(3次中2次)；能在4吋闊8呎長的直線上向前步行8呎遠，身體擺動少於20度'
-        }
-      },
-      {
-        id: 5,
-        name: '黃芊淳',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2627/045',
-        dob: '2021-10-20',
-        className: '上低C',
-        teacher: '周老師',
-        tier: 'A',
-        mode: '入班/個別/小組',
-        statusTag: '插班生',
-        remarks: '⚠️ X拍照（不要任何宣傳資訊）｜排堂備註：家長意願只排上午學校課堂',
-        specialNeeds: 'WEAK IN WORD LEARNING / SUSPECTED LANGUAGE DIFFICULTIES / ANXIETY PROBLEMS（文字學習能力稍弱、懷疑語言困難、焦慮問題｜備註：X拍照 不要任何宣傳資訊）',
-        goals: {
-          社交情緒: '[自我概念 - 獨立及自主能力] 能自己計劃想做的事，並付諸實行，如：畫心意卡（口頭提示）；[自我概念 - 獨立及自主能力] 能在群體中主動舉手回答問題、要求參與活動或答應協助完成小差事（口頭提示）；[情緒表現 - 情緒管理] 面對困難或挫敗時，願意積極嘗試或尋求協助，如：拼砌較難的拼圖時不輕易放棄、做功課有難題時會請教別人（口頭提示）；[情緒表現 - 情緒管理] 能運用適當方法紓解負面情緒，如：深呼吸、向成人分享經歷（視覺提示）',
-          語言: '[語言表達 - 解說能力] 能指出圖畫中不恰當的行為，解釋原因，並提出改善方法，如：「姐姐唔可以用叉刷牙，因為叉唔係用來刷牙，用來食嘢，要用牙刷來刷牙」（視覺提示）；[語言表達 - 敘事能力] 能在敘述個人過去發生的事件時，交代故事的起因、經過及結果（視覺提示）',
-          認知: '[空間概念 - 平面空間] 能抄寫簡單中文字5個，如︰上、中、山、大、水；[形狀概念 - 組合形狀] 能用不同物料砌出圖形，如：三角形',
-          小肌肉: '[手眼協調 - 準確地操控物件] 能沿手掌畫線；[文具操作 - 鉛筆刨操作] 能用鉛筆刨刨鉛筆',
-          自理: '[家居技能 - 將衣服掛在衣架上] 能自行把外衣套在衣架上，並將衣架掛在掛鈎上（期間沒有把外衣掉在地上）',
-          大肌肉: '[協調能力 - 球類操控技巧] 能雙手手掌接著由5呎遠拋來的8吋膠球；[協調能力 - 球類操控技巧] 能單手下手拋網球至5呎遠2呎X2呎的目標（3次中2次）'
-        }
-      },
-      {
-        id: 6,
-        name: '布晫逸',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '男',
-        fileNo: 'ICF/HK&KLN/2526/010',
-        dob: '2022-01-11',
-        className: '下低A',
-        teacher: '洪老師',
-        tier: 'A',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '字母抄寫特別留意字母 E 及 D',
-        specialNeeds: '專注力問題伴隨過度活躍、認字學習較弱、言語遲緩、自閉症譜系特徵、口語顯著遲緩（Attention Problem with over activity, weak in word learning, Speech Delay, ASD features, Oral Language Significant delay）',
-        goals: {
-          語言: '能在大牙位置咬實4號牙膠棒(左右各十五秒)；能正確讀出含舌齒滑音/l-/(啦)音的單字詞，如：「拉」、「路」（觸體協助）；能說出標示地點或空間關係的短語，如：擺襪喺籃度（口頭提示）；能說出時序連接詞：首先、跟住、之後、然後、最後（口頭提示）',
-          小肌肉: '能抄寫部份英文字母，如：E、F、H、I、L、T（視覺提示）；能以雙手交替動作把0.25厘米的珠粒拉過繩子（口頭提示）；能用4至6條雪條棒仿砌簡單英文字母；能模仿成人，用手指做出不同的手勢，例如：1字手勢、槍形手勢、V字手勢、圓圈手勢等（視覺提示）',
-          認知: '能認讀大楷字母咭A-G（口頭提示）',
-          社交情緒: '在成人指示下，能跟從簡單的遊戲規則，如：正確地輪序擲骰子、按骰子點數行棋（口頭提示）；能主動分享日常生活體驗或喜好，如：「老師帶我去海洋公園，好好玩」（口頭提示）',
-          自理: '能用筷子扒食物入口，三次有兩次成功',
-          大肌肉: '能原地單腳跳2下；能雙腳同步跳過10吋高的障礙物，著地後仍能站穩；能單手上手擲網球至5呎遠2呎X2呎的目標(3次中2次)'
-        }
-      },
-      {
-        id: 7,
-        name: '胡淳壹',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '男',
-        fileNo: 'ICF/HK&KLN/2526/069',
-        dob: '2022-08-01',
-        className: '下低A',
-        teacher: '洪老師',
-        tier: 'B',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '接受 SCCW、ST、OT 支援',
-        specialNeeds: '顯著語言困難、懷疑發展遲緩、口語顯著遲緩、小肌肉及大肌肉懷疑遲緩（significant language difficulties, suspected developmental delay, oral language significant delay, fine motor suspected delay, gross motor suspected delay）',
-        goals: {
-          語言: '能完成3號牙膠棒的下顎骨穩定練習；能吹動一個已吹出的泡泡；能配合地方及活動回答「邊度」(哪裡) 的問題，如：「去邊度小便呀?」→「廁所」；能說出連謂謂語句-表達事件目的，如：姐姐去公園玩波',
-          社交情緒: '能向別人發問以尋求資訊，如：「咩黎㗎？」、「呢個愛嚟做乜㗎？」、「喺邊度買？」；在熟悉話題下，能作適當的回應以保持簡單輪序對話2至3回，如：「我都鍾意呀」、「我屋企都有」、「我未試過」',
-          小肌肉: '能抄寫部份英文字母，如：E、F、H、I、L、T；能在紙上畫一個有三個身體部份的人',
-          自理: '能用學習筷子扒食物入口，三次有兩次成功',
-          認知: '能說出物件名稱(日用品類)，如︰雨傘、毛巾',
-          大肌肉: '能雙手手掌接著由5呎遠拋來的8吋膠球；能垂手向後拉，並扭動上身，將網球拋至5呎遠2呎X2呎的目標(3次中2次)'
-        }
-      },
-      {
-        id: 8,
-        name: '黃梓涵',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2526/018',
-        dob: '2021-02-15',
-        className: '上高A',
-        teacher: '胡老師',
-        tier: 'B',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '⚠️ N拍照｜目光接觸偏弱',
-        specialNeeds: '邊緣整體發展遲緩、顯著語言障礙、小肌肉輕度遲緩、社交及溝通技巧受損、專注力問題伴隨過度活躍（Borderline global developmental delay, significant language disorder, fine Motor mild delay, Social and communication skills impairment, Attention problem with over activity｜備註：N拍照）',
-        goals: {
-          語言: '能明白簡單故事內容並回答直接的問題（口頭提示）；能運用連接詞「雖然⋯但係⋯」表達轉折關係，如：「雖然天氣好熱，但係哥哥仲着好多衫」；能觀察到及說出不妥當的地方，加以解釋及提供解決方法',
-          社交情緒: '當別人要求澄清或解釋時，能嘗試調整或修改說話內容；自己的要求未能被滿足時，願意忍耐或接受（視覺提示）',
-          認知: '能回答生活上的如果問題，如：如果受傷，你會點做？（口頭提示）；能指出自己的左邊、右邊',
-          小肌肉: '能寫出自己姓名',
-          自理: '能一手用叉叉食物，另一手用刀切斷食物(三次有兩次成功)，然後將切斷的食物送入口進食',
-          大肌肉: '能雙手接回自行拋高的豆袋(3次中2次)；能單手接回彈地的網球(3次中2次)'
-        }
-      },
-      {
-        id: 9,
-        name: '姜懿恩',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '男',
-        fileNo: 'ICF/HK&KLN/2526/023',
-        dob: '2020-07-25',
-        className: '上高B',
-        teacher: '李詠祺老師',
-        tier: 'B',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '小組中較被動，故事重述結構較鬆散',
-        specialNeeds: '顯著整體發展遲緩、口語顯著遲緩、社交技巧較弱（Significant Global developmental delay, Oral Language Significant delay, weak social skills）',
-        goals: {
-          語言: '能明白「幾時？」問句（視覺提示）；能在重述故事時，交代故事背景 (時、人、地、事)（視覺提示）；能根據提供的條件〔類別、特徵〕，列舉四至五個例子：如：食物類、海洋動物（視覺提示）；能運用連接詞「雖然⋯但係⋯」表達轉折關係，如：「雖然天氣好熱，但係哥哥仲着好多衫」（口頭提示）',
-          認知: '能計算10以內的加法（視覺提示）；能指出自己的左邊、右邊',
-          社交情緒: '不需成人指示，能公平地參與競賽遊戲並遵守遊戲規則，如：誠實地抽取罰牌數量、按骰子點數行棋；能表達及解釋自己的想法及意見，如：「我唔想玩呢份玩具，因為我玩過好多次」（口頭提示）',
-          小肌肉: '能抄寫較複雜中文字，如：花、過、飛',
-          自理: '能分辨衣物的正反面及將衣物翻回正面穿著',
-          大肌肉: '能連續跳繩3下'
-        }
-      },
-      {
-        id: 10,
-        name: '黃芊悅',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2526/027',
-        dob: '2021-09-29',
-        className: '上高B',
-        teacher: '李詠祺老師',
-        tier: 'B',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: 'Late Preterm, birth weight 1.25kg, viral induced wheeze, history of congenital hypothyroidism（晚期早產、出生體重1.25kg、病毒誘發喘鳴及先天性甲狀腺功能低下病史）',
-        goals: {
-          社交情緒: '能用說話邀請其他幼童一起玩耍，如：「我哋一齊玩啦」（視覺提示）；面對困難或挫敗時，願意積極嘗試或尋求協助，如：拼砌較難的拼圖時不輕易放棄、做功課有難題時會請教別人（口頭提示）；能在群體中主動舉手回答問題、要求參與活動或答應協助完成小差事（口頭提示）',
-          語言: '能運用連接詞「雖然⋯但係⋯」表達轉折關係，如：「雖然天氣好熱，但係哥哥仲着好多衫」',
-          認知: '能說出組合圖內形狀的名稱；能仿寫複雜中文字5個，如︰車、玩、草、園、遊（口頭提示）',
-          小肌肉: '能用筆連點，畫一個正方形；能在2吋直徑圓形內填色不出界',
-          自理: '能用筷子夾食物入口，三次有兩次成功（視覺提示）',
-          大肌肉: '能雙手接回彈地的8吋膠球(3次中2次)；左右腳均能連續單腳向前跳4下；能雙腳同步跳過10吋高的障礙物，著地後仍能站穩'
-        }
-      },
-      {
-        id: 11,
-        name: '劉弈泓',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '男',
-        fileNo: 'ICF/HK&KLN/2526/019',
-        dob: '2021-04-13',
-        className: '下高A',
-        teacher: '林老師',
-        tier: 'B',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '發展問題／懷疑發展遲緩、顯著語言障礙、小肌肉及大肌肉懷疑遲緩、專注力問題伴隨過度活躍（Developmental Problem, Significant language disorder, Suspected developmental delay, Fine motor Suspected delay, Gross motor suspected delay, Attention problem with over activity）',
-        goals: {
-          社交情緒: '能與別人討論及協商條件，如：「不如我哋揀紅色啦，好唔好？」（視覺提示）；能運用適當方法紓解負面情緒，如：深呼吸、向成人分享經歷（視覺提示）；有特別需要時能先請示老師，如：有喝水或如廁需要時（視覺提示）',
-          語言: '能運用連接詞「如果⋯就⋯」表達條件關係，如：「如果哥哥落雨冇帶遮，哥哥就會濕哂」（口頭提示）；能在重述故事時運用連接詞「然後」及「最後」連接故事內容（口頭提示）；能根據提供的條件〔類別、特徵〕，列舉四至五個例子：如：食物類、海洋動物（視覺提示）',
-          認知: '能計算10以內的加法（口頭提示）；能回答生活上的如果問題，如：如果受傷，你會點做？（口頭提示）',
-          小肌肉: '能仿畫菱形（視覺提示）；能沿線剪出圓形 (直徑：10厘米，線粗：0.4厘米)（口頭提示）',
-          自理: '能用筷子夾食物入口，三次有兩次成功（視覺提示）；能自行擺放每份食具及收拾食具（口頭提示）',
-          大肌肉: '能用左及右腳單腳站立8秒，身體擺動少於20度；能雙手接回自行拋高的豆袋(3次中2次)'
-        }
-      },
-      {
-        id: 12,
-        name: '陳彥勻',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '男',
-        fileNo: 'ICF/HK&KLN/2425/029',
-        dob: '2020-10-24',
-        className: '下高A',
-        teacher: '林老師',
-        tier: 'B',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '口語顯著遲緩、語言障礙、小肌肉懷疑遲緩、大肌肉輕度遲緩、懷疑自閉症譜系障礙、專注力問題伴隨過度活躍、焦慮及情緒調節問題、感覺統合問題（Oral Language Significant delay, Language Disorder, Fine Motor Suspected Delay, Gross Motor Mild Delay, Suspected ASD, Attention problem with over activity, Anxiety problem, sensory integration problems）',
-        goals: {
-          社交情緒: '圍繞同一話題，持續地回應及發問以保持輪序對話（視覺提示）；表達及解釋自己的想法及意見（口頭提示）；主動向別人提出解難方法或建議（口頭提示）',
-          語言: '能正確讀出含舌齒滑音/l-/(啦)音的句子短句，如：「我玩燈籠」；能在敘述個人過去發生的事件時，交代故事的起因、經過及結果（視覺提示）；能就物件的種類、用途、主要特徵，來為物件下定義，如：「帽是衣物，戴在頭上，用來遮太陽或裝飾」（視覺提示）',
-          認知: '能回答生活上的如果問題，如：如果受傷，你會點做？；能認讀複雜中文字(校本課程)',
-          小肌肉: '能抄寫較複雜中文字，如：花、過、飛',
-          自理: '能用筷子夾食物入口，三次有兩次成功；能自行綁好鞋帶（手勢提示）',
-          大肌肉: '能在4吋闊8呎長的直線上腳跟貼腳尖向後步行8呎遠；能暢順地完成雙腳跳轉單腳跳向前連續2組'
-        }
-      },
-      {
-        id: 13,
-        name: '黃芷悠',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2627/014',
-        dob: '2023-05-12',
-        className: '上幼A',
-        teacher: '曾老師',
-        tier: 'A',
-        mode: '入班/個別',
-        statusTag: '',
-        remarks: '已整合《ITP_黃芷悠(2026年9月至2027年2月).docx》',
-        specialNeeds: '發展問題／懷疑發展遲緩、顯著語言困難、口語顯著遲緩、小肌肉及大肌肉懷疑遲緩、社交及溝通技巧受損（Developmental Problem / Significant language difficulties / Suspected developmental delay / Oral Significant delay / Fine Motor and Gross Motor Suspected delay / Social and communication skills impairment）',
-        goals: {
-          語言: '能說出10個新詞彙 (動物、人物)（口頭提示）；能運用「動作+物件」的雙詞句表達，如：「食餅」、「坐車」（口頭提示）；能運用「人物+動作」的雙詞句表達，如：「我食」、「爸爸買」、「媽媽畀」（口頭提示）',
-          認知: '能說出四種顏色的名稱，如︰紅、黃、藍、綠（口頭提示）；能將兩塊積木向橫排列（視覺提示）；能認讀1至3（口頭提示）',
-          自理: '能穿上鞋子；能穿上外套',
-          小肌肉: '能把毛巾整齊地對摺；能將漿糊塗在圖形上',
-          大肌肉: '能在4吋闊8呎長的直線上向前步行6步，身體擺動少於20度；能雙手手掌接著由5呎遠拋來的8吋膠球(3次中2次)',
-          社交情緒: '能用說話要求協助，如：「幫我」（口頭提示）；能用說話回應簡單問題，如：「你飲唔飲橙汁呀？」-->「飲」/「唔飲」（口頭提示）'
-        }
-      },
-      {
-        id: 14,
-        name: '王雨仟',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2627/037',
-        dob: '2023-06-06',
-        className: '上幼C',
-        teacher: '薛老師',
-        tier: 'A',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '⚠️ NO拍照｜已整合《ITP_parent_王雨仟(2026年9月至2027年2月).docx》',
-        specialNeeds: '顯著語言困難、懷疑發展遲緩、口語顯著遲緩、小肌肉及大肌肉懷疑遲緩（Significant language difficulties / Suspected DD / Oral Significant Delay / Fine Motor Suspected Delay / Gross Motor Suspected Delay｜備註：NO拍照）',
-        goals: {
-          語言: '能運用「人物+動作」的雙詞句表達，如：「我食」、「爸爸買」、「媽媽畀」（口頭提示）；能運用「動作+物件」的雙詞句表達，如：「食餅」、「坐車」（口頭提示）',
-          認知: '能說出四種顏色的名稱，如︰紅、黃、藍、綠（口頭提示）；能挑選圖片(1:3)（口頭提示）',
-          社交情緒: '能用說話表達要求，如：「飲奶」、「開門」（口頭提示）；能用說話要求協助，如：「幫我」（口頭提示）',
-          小肌肉: '能開合剪刀；能將漿糊塗在圖形上；能一手按紙，一手握筆寫畫',
-          大肌肉: '能垂手向後拉，拋網球向前5呎遠；能雙腳同步向前跳半呎遠',
-          自理: '能扣上大鈕扣（視覺提示）'
-        }
-      },
-      {
-        id: 15,
-        name: '高仟潼',
-        group: '方換 — 下年名單',
-        schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2627/066',
-        dob: '2023-11-07',
-        className: '上幼C',
-        teacher: '薛老師',
-        tier: 'A',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '已整合《ITP_parent_高仟潼(2026年9月至2027年2月).docx》',
-        specialNeeds: '顯著語言困難、懷疑發展遲緩、口語顯著遲緩、小肌肉及大肌肉懷疑遲緩（Significant language difficulties / Suspected DD / Oral Significant delay / Fine Motor and Gross Motor Suspected delay）',
-        goals: {
-          語言: '能說出10個新詞彙 (食物)（口頭提示）；能運用「人物+動作」的雙詞句表達，如：「我食」、「爸爸買」、「媽媽畀」；能運用「動作+物件」的雙詞句表達，如：「食餅」、「坐車」',
-          社交情緒: '能用說話表達拒絕，如：「唔要」、「唔玩」（口頭提示）；能用說話表達要求，如：「飲奶」、「開門」',
-          自理: '能脫下已拉開拉鍊或已解開鈕扣的外套',
-          認知: '能砌6塊連扣式拼圖（口頭提示）；能說出四種顏色的名稱，如︰紅、黃、藍、綠（口頭提示）',
-          小肌肉: '能扭上罐的蓋；能模仿將四件玩具排成一行',
-          大肌肉: '能垂手向後拉，拋網球向前5呎遠；能用雙手抱接由5呎遠拋來的8吋膠球(3次中2次)；能單手扶持或扶著扶手，一步一級上4級樓梯級'
-        }
-      },
+    const STORAGE_KEY = 'plk_students_dynamic_v5';
+    const FLOWCHART_LOGS_KEY = 'plk_flowchart_logs_dynamic_v5';
+    const GAS_SYNC_SETTINGS_KEY = 'plk_gas_sync_settings_v2';
 
-      // ==================== 組別二：方換 — T1 名單（共 11 人，學童資料表中未有紀錄，特殊需要留空） ====================
-      {
-        id: 16,
-        name: '譚芷玄',
-        group: '方換 — T1 名單',
-        schoolFullName: '保良局方王換娣幼稚園 (T1 第一層支援)',
-        gender: '女',
-        fileNo: '',
-        dob: '',
-        className: '上低B',
-        teacher: '李毓芳老師',
-        tier: 'T1',
-        mode: 'T1 入班',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '',
-        goals: {
-          語言: '能説出常見的物品名稱，如：食物類、餐具類（視覺提示）'
-        }
-      },
-      {
-        id: 17,
-        name: '黃楒羽',
-        group: '方換 — T1 名單',
-        schoolFullName: '保良局方王換娣幼稚園 (T1 第一層支援)',
-        gender: '女',
-        fileNo: '',
-        dob: '',
-        className: '上低B',
-        teacher: '李毓芳老師',
-        tier: 'T1',
-        mode: 'T1 入班',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '',
-        goals: {}
-      },
-      {
-        id: 18,
-        name: '陳逸琋',
-        group: '方換 — T1 名單',
-        schoolFullName: '保良局方王換娣幼稚園 (T1 第一層支援)',
-        gender: '男',
-        fileNo: '',
-        dob: '',
-        className: '上低B',
-        teacher: '李毓芳老師',
-        tier: 'T1',
-        mode: 'T1 入班',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '',
-        goals: {}
-      },
-      {
-        id: 19,
-        name: '古傲亭',
-        group: '方換 — T1 名單',
-        schoolFullName: '保良局方王換娣幼稚園 (T1 第一層支援)',
-        gender: '男',
-        fileNo: '',
-        dob: '',
-        className: '上低A',
-        teacher: '周樂雯老師',
-        tier: 'T1',
-        mode: 'T1 入班',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '',
-        goals: {}
-      },
-      {
-        id: 20,
-        name: '李煦瑜',
-        group: '方換 — T1 名單',
-        schoolFullName: '保良局方王換娣幼稚園 (T1 第一層支援)',
-        gender: '女',
-        fileNo: '',
-        dob: '',
-        className: '上低A',
-        teacher: '周樂雯老師',
-        tier: 'T1',
-        mode: 'T1 入班',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '',
-        goals: {}
-      },
-      {
-        id: 21,
-        name: '尹顯禮',
-        group: '方換 — T1 名單',
-        schoolFullName: '保良局方王換娣幼稚園 (T1 第一層支援)',
-        gender: '男',
-        fileNo: '',
-        dob: '',
-        className: '下幼A',
-        teacher: '周老師',
-        tier: 'T1',
-        mode: 'T1 入班',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '',
-        goals: {}
-      },
-      {
-        id: 22,
-        name: '林豪傑',
-        group: '方換 — T1 名單',
-        schoolFullName: '保良局方王換娣幼稚園 (T1 第一層支援)',
-        gender: '男',
-        fileNo: '',
-        dob: '',
-        className: '下幼A',
-        teacher: '周老師',
-        tier: 'T1',
-        mode: 'T1 入班',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '',
-        goals: {}
-      },
-      {
-        id: 23,
-        name: '馮柏然',
-        group: '方換 — T1 名單',
-        schoolFullName: '保良局方王換娣幼稚園 (T1 第一層支援)',
-        gender: '男',
-        fileNo: '',
-        dob: '',
-        className: '上幼C',
-        teacher: '薛老師',
-        tier: 'T1',
-        mode: 'T1 入班',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '',
-        goals: {}
-      },
-      {
-        id: 24,
-        name: '陳奕辰',
-        group: '方換 — T1 名單',
-        schoolFullName: '保良局方王換娣幼稚園 (T1 第一層支援)',
-        gender: '男',
-        fileNo: '',
-        dob: '',
-        className: '上高A',
-        teacher: '胡老師',
-        tier: 'T1',
-        mode: 'T1 入班/小組',
-        statusTag: '退出',
-        remarks: '已退出 T1 服務',
-        specialNeeds: '',
-        goals: {
-          社交情緒: '能用簡單語句向成人表達要求，獲得同意後再行動（口頭提示）'
-        }
-      },
-      {
-        id: 25,
-        name: '賴芊焮',
-        group: '方換 — T1 名單',
-        schoolFullName: '保良局方王換娣幼稚園 (T1 第一層支援)',
-        gender: '女',
-        fileNo: '',
-        dob: '',
-        className: '上高A',
-        teacher: '胡老師',
-        tier: 'T1',
-        mode: 'T1 入班/小組',
-        statusTag: '退出',
-        remarks: '已退出 T1 服務',
-        specialNeeds: '',
-        goals: {
-          社交情緒: '在成人帶領下，能與幼兒參與簡單競賽遊戲，並在競賽遊戲中接受贏輸（口頭提示）'
-        }
-      },
-      {
-        id: 26,
-        name: '朱稙進',
-        group: '方換 — T1 名單',
-        schoolFullName: '保良局方王換娣幼稚園 (T1 第一層支援)',
-        gender: '男',
-        fileNo: '',
-        dob: '',
-        className: '上高B',
-        teacher: '李詠祺老師',
-        tier: 'T1',
-        mode: 'T1 入班',
-        statusTag: '退出',
-        remarks: '已退出 T1 服務',
-        specialNeeds: '',
-        goals: {
-          語言: '能運用簡單連接詞，如：「因為… 所以…」（口頭提示）'
-        }
-      },
+    // 自動以開啟當日年月計算幼童實齡
+    const _today = new Date();
+    const REFERENCE_DATE = { year: _today.getFullYear(), month: _today.getMonth() + 1, day: _today.getDate() };
 
-      // ==================== 組別三：慧妍（共 2 人） ====================
-      {
-        id: 27,
-        name: '李承燁',
-        group: '慧妍',
-        schoolFullName: '保良局慧妍雅集幼稚園暨幼兒園 (OPRS)',
-        gender: '男',
-        fileNo: 'ICF/HK&KLN/2526/061',
-        dob: '2021-03-01',
-        className: '高班',
-        teacher: '慧妍班主任',
-        tier: 'B',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '整體發展遲緩、懷疑自閉症譜系障礙、發音問題、大肌肉輕度遲緩（Global Developmental Delay, Suspected ASD, articulation problem, Gross Motor mild delay）',
-        goals: {
-          社交情緒: '能表達及解釋自己的想法及意見，如：「我唔想玩呢份玩具，因為我玩過好多次」（口頭提示）；能用說話安慰和幫助別人，如：「唔好唔開心啦」、「我幫你整番」',
-          語言: '能根據情況提供可行合理的解決辦法；能就故事背景推算故事發展',
-          認知: '能仿寫複雜中文字5個，如︰車、玩、草、園、遊；能說出錢幣的面值',
-          小肌肉: '能寫出自己姓名（視覺提示）；能沿線剪出圓形 (線粗0.2厘米、直徑5厘米)',
-          自理: '能自行綁好鞋帶（口頭提示）',
-          大肌肉: '能雙手接回自行拋高的豆袋(3次中2次)；能左右腳輪流踏跳10呎'
-        }
-      },
-      {
-        id: 28,
-        name: '辛玥昕',
-        group: '慧妍',
-        schoolFullName: '保良局慧妍雅集幼稚園暨幼兒園 (OPRS)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2526/047',
-        dob: '2022-03-17',
-        className: '低班',
-        teacher: '慧妍班主任',
-        tier: 'B',
-        mode: '入班/個別/小組',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '顯著整體發展遲緩、口語顯著遲緩、小肌肉輕度遲緩、社交技巧較弱（Significant global Developmental Delay, oral Significant Delay, Fine Motor mild delay, weak in social skills）',
-        goals: {
-          社交情緒: '能用說話邀請其他幼童一起玩耍，如：「我哋一齊玩啦」（口頭提示）；能在提問下解釋引發情緒的起因，如：「我冇得睇電視，我好唔開心」',
-          語言: '能排列4張程序圖卡；能運用連接詞「首先、然後/跟住、最後」表達時序關係，如：「首先著衫，然後著襪，最後著鞋」；能在下顎承托下吹一號吹氣管連續二十次；能連續地說出「依嗚/啊吳」4次',
-          認知: '能認讀大楷H-Z（視覺提示）；能數出10以內數量的物件（口頭提示）',
-          小肌肉: '能沿手掌畫線；能用筆連點，畫一個正方形；能抄寫部份英文字母，如：E、F、H、I、L、T（視覺提示）',
-          自理: '能自行拉拉鍊（口頭提示）',
-          大肌肉: '能單手上手擲網球向前10呎遠；能雙手手掌接著由5呎遠拋來的8吋膠球(3次中2次)；能於沒有扶助下一步一級落4級樓梯級'
-        }
-      },
-
-      // ==================== 組別四：蔡繼有（共 7 人，4人找到、3人未找到特殊需要留空） ====================
-      {
-        id: 29,
-        name: '盧美蓓',
-        group: '蔡繼有',
-        schoolFullName: '保良局蔡繼有幼稚園暨幼兒園 (OPRS)',
-        gender: '女',
-        fileNo: 'ICF/HK&KLN/2627/050',
-        dob: '2024-01-10',
-        className: '幼班',
-        teacher: '蔡繼有老師',
-        tier: 'A',
-        mode: '個別/入班',
-        statusTag: '',
-        remarks: '目光接觸偏弱、生活經驗偏少，表現較易放棄',
-        specialNeeds: '顯著語言困難、懷疑發展遲緩、口語顯著遲緩、小肌肉及大肌肉懷疑遲緩（Significant language difficulties / suspected developmental delay / Oral significant delay / Fine Motor Suspected delay / Gross Motor Suspected delay）',
-        goals: {
-          語言: '詞彙表達（食物）；運用5個動詞表達要求；減少口肌過敏',
-          社交情緒: '用說話表達要求；跟從日常生活及課堂流程',
-          認知: '配對大小不同的形狀；按指示挑選物件',
-          小肌肉: '模仿4件玩具排成一行；一頁一頁翻書；一手按紙一手寫畫',
-          自理: '用匙羹進食、脫外套、即時收拾',
-          大肌肉: '行平衡木（向前6步）；雙腳同步向前跳半呎'
-        }
-      },
-      {
-        id: 30,
-        name: '郭竣諾',
-        group: '蔡繼有',
-        schoolFullName: '保良局蔡繼有幼稚園暨幼兒園 (OPRS)',
-        gender: '男',
-        fileNo: 'ICF/HK&KLN/2526/104',
-        dob: '2021-08-06',
-        className: '高班',
-        teacher: '蔡繼有老師',
-        tier: 'B',
-        mode: '個別/入班',
-        statusTag: '',
-        remarks: '',
-        specialNeeds: '懷疑發展遲緩、口語顯著遲緩、小肌肉及大肌肉懷疑遲緩（Suspected Developmental Delay, Oral language significant delay, Fine motor suspected delay, Gross motor suspected delay）',
-        goals: {
-          社交情緒: '能圍繞同一話題，持續地回應及發問以保持輪序對話4至5回（視覺提示）；能在群體中主動舉手回答問題、要求參與活動或答應協助完成小差事（視覺提示）；面對困難或挫敗時，願意積極嘗試或尋求協助（視覺提示）；能用說話處理引發負面情緒的問題（口頭提示）',
-          語言: '能觀察到及說出不妥當的地方，加以解釋及提供解決方法（口頭提示）；能運用連接詞「雖然⋯但係⋯」表達轉折關係（口頭提示）；能在重述故事時，交代故事背景 (時、人、地、事)（視覺提示）',
-          認知: '能說出不同的形狀名稱，如︰正方形、長方形；能以他物為中心說出物件空間位置︰前面、後面；能認讀簡單中文字，如：下、大、木',
-          小肌肉: '能在2吋直徑圓形內填色不出界；能於2厘米X 2厘米的方格內抄寫5至8劃中文字，如﹕羊、門、肉、車；能沿線剪出正方形 (線粗0.6厘米、邊長10厘米)',
-          自理: '能自己撕下卷裝廁紙並摺疊，並將大便清理乾淨（視覺提示）',
-          大肌肉: '能雙腳同步連續向左向右側跳3個循環；能單手連續拍打8吋膠球向下5下'
-        }
-      },
-      {
-        id: 31,
-        name: '黃智謙',
-        group: '蔡繼有',
-        schoolFullName: '保良局蔡繼有幼稚園暨幼兒園 (OPRS)',
-        gender: '男',
-        fileNo: 'ICF/HK&KLN/2627/030',
-        dob: '2023-01-20',
-        className: '低班',
-        teacher: '蔡繼有老師',
-        tier: 'A',
-        mode: '個別/入班',
-        statusTag: '',
-        remarks: '在學校表現較被動、需支援輸贏情緒調適',
-        specialNeeds: '顯著語言困難、認知懷疑發展遲緩、口語顯著遲緩、小肌肉及大肌肉懷疑遲緩（Significant language difficulties, cognition suspected Developmental Delay, Oral language significant delay, Fine motor suspected delay, Gross motor suspected delay）',
-        goals: {
-          語言: '運用「動詞+物件+人物」三詞句；運用「擺(物件)(地方)」三詞句',
-          社交情緒: '在群體中主動舉手回答問題；在分組活動中與幼童分享及簡單交談',
-          認知: '說出形狀名稱；砌6塊連扣式拼圖；物件分類',
-          小肌肉: '剪開紙張；畫一個有三個身體部份的人',
-          自理: '扣鈕練習（手眼協調及雙手協調）',
-          大肌肉: '單腳站立（左5秒、右4秒）；踩單車轉大彎；雙手手掌接膠球'
-        }
-      },
-      {
-        id: 32,
-        name: '彭葆峰',
-        group: '蔡繼有',
-        schoolFullName: '保良局蔡繼有幼稚園暨幼兒園 (OPRS)',
-        gender: '男',
-        fileNo: 'ICF/HK&KLN/2526/076',
-        dob: '2022-10-07',
-        className: '低班',
-        teacher: '蔡繼有老師',
-        tier: 'B',
-        mode: '個別/入班',
-        statusTag: '',
-        remarks: '備註：長大後偶有對抗性表現，給予選擇空間及引導協商後即時讚賞效果良好',
-        specialNeeds: '邊緣整體發展遲緩、口語顯著遲緩、小肌肉輕度遲緩（Borderline Global Developmental Delay, Oral Language Significant delay, fine motor mild delay）',
-        goals: {
-          語言: '能正確讀出含合嘴送氣塞音/ph-/(婆)的雙字詞，如：「排隊」、「球拍」；能在大牙位置咬實4號牙膠棒(左右各十五秒)；能說出標示地點或空間關係的短語，如：擺襪喺籃度（口頭提示）；能說出連謂謂語句-表達事件目的，如：去公園玩波（口頭提示）',
-          社交情緒: '能與別人傾談有關過去或未來的事情，如：「頭先同媽咪去游水」、「聽日去邊？」（口頭提示）；能於課堂或活動中安坐至少10分鐘（視覺提示）；能與幼童共同分享玩具或工具，並作簡單交談（口頭提示）',
-          認知: '能砌6塊連扣式拼圖；能把兩項物件分類，如︰交通工具、食物；能認讀1-3',
-          小肌肉: '能將漿糊塗在圖形上；能抄寫部份英文字母，如：E、F、H、I、L、T',
-          自理: '能用筷子扒食物入口，三次有兩次成功',
-          大肌肉: '能雙腳向前跳2呎遠；能雙手手掌接著由5呎遠拋來的8吋膠球(3次中2次)；能垂手向後拉，並扭動上身，將網球拋向前10呎遠'
-        }
-      },
-      {
-        id: 33,
-        name: '黃懿祈',
-        group: '蔡繼有',
-        schoolFullName: '保良局蔡繼有幼稚園暨幼兒園 (T1 第一層支援)',
-        gender: '女',
-        fileNo: '',
-        dob: '',
-        className: '蔡繼有',
-        teacher: '蔡繼有老師',
-        tier: 'T1',
-        mode: '入班/小組',
-        statusTag: '',
-        remarks: '已整合《第一層支援入班支援及個別訓練流程記錄表_蔡繼有_11月.docx》',
-        specialNeeds: '',
-        goals: {
-          社交情緒: '能按老師指示完成課堂活動'
-        }
-      },
-      {
-        id: 34,
-        name: '莫若燊',
-        group: '蔡繼有',
-        schoolFullName: '保良局蔡繼有幼稚園暨幼兒園 (T1 第一層支援)',
-        gender: '男',
-        fileNo: '',
-        dob: '',
-        className: '蔡繼有',
-        teacher: '蔡繼有老師',
-        tier: 'T1',
-        mode: '入班',
-        statusTag: '',
-        remarks: '已整合《第一層支援入班支援及個別訓練流程記錄表_蔡繼有_11月.docx》',
-        specialNeeds: '',
-        goals: {
-          社交情緒: '能在提問下解釋引發情緒的起因(如：「我冇得睇電視，我有啲唔開心」、「我有雪糕食，我好開心」)'
-        }
-      },
-      {
-        id: 35,
-        name: '鄺庭萱',
-        group: '蔡繼有',
-        schoolFullName: '保良局蔡繼有幼稚園暨幼兒園 (T1 第一層支援)',
-        gender: '女',
-        fileNo: '',
-        dob: '',
-        className: '蔡繼有',
-        teacher: '蔡繼有老師',
-        tier: 'T1',
-        mode: '入班/小組',
-        statusTag: '',
-        remarks: '已整合《第一層支援入班支援及個別訓練流程記錄表_蔡繼有_11月.docx》',
-        specialNeeds: '',
-        goals: {
-          社交情緒: '能與其他幼童共同分享玩具或工具，並能用說話作邀請或簡單交談 (如：一齊玩)'
-        }
-      }
-    ];
-
-    // 預載從 Google Drive 各份 9–11 月《個別訓練流程記錄表》、《二人小組訓練流程記錄表》及《第一層支援流程表》提取之真實課堂記錄
-    const DEFAULT_FLOWCHART_LOGS = [
-      // 1. 何卓謠 (10月、11月個別及二人小組流程表)
-      { childName: '何卓謠', date: '06/10', type: '個別', progress: 'Ve/Vi', text: '能運用「人物+地方+活動」的三詞句表達；能認讀5-10；能說出不同的形狀名稱；能用4至6條雪條棒仿砌簡單英文字母及中文字' },
-      { childName: '何卓謠', date: '15/10', type: '個別', progress: 'Vi/Ve', text: '能說出標示地點或空間關係的短語，如：擺襪喺籃度；能抄寫部份英文字母，如：E、F、H、I、L、T；能沿手掌畫線；能將鞋子穿在正確的腳上；能雙手接回彈地的8吋膠球' },
-      { childName: '何卓謠', date: '20/10', type: '入班', progress: 'Ve/Vi', text: '能與別人傾談有關過去或未來的事情；自己的要求未能被滿足時，願意忍耐或接受；能沿手掌畫線；能順數背誦1-20' },
-      { childName: '何卓謠', date: '23/10', type: '小組', progress: 'Vi/Ve', text: '自己的要求未能被滿足時，願意忍耐或接受；能與別人傾談有關過去或未來的事情；能運用「人物+地方+活動」的三詞句表達' },
-      { childName: '何卓謠', date: '03/11', type: '入班', progress: 'Vi/Ve', text: '能說出不同的形狀名稱；能說出標示地點或空間關係的短語，如：擺襪喺籃度' },
-      { childName: '何卓謠', date: '12/11', type: '入班', progress: '待填', text: '能順數背誦1-20；能認讀5-10；能說出不同的形狀名稱' },
-      { childName: '何卓謠', date: '12/11', type: '個別', progress: '待填', text: '能運用「人物+地方+活動」的三詞句表達；能說出標示地點或空間關係的短語；能用4至6條雪條棒仿砌簡單英文字母及中文字；能將鞋子穿在正確的腳上' },
-      { childName: '何卓謠', date: '17/11', type: '入班', progress: '待填', text: '自己的要求未能被滿足時，願意忍耐或接受；能自行拉拉鍊；能說出標示地點或空間關係的短語' },
-      { childName: '何卓謠', date: '19/11', type: '入班', progress: '待填', text: '能與別人傾談有關過去或未來的事情；能抄寫部份英文字母，如：E、F、H、I、L、T；能沿手掌畫線' },
-      { childName: '何卓謠', date: '30/11', type: '個別', progress: '待填', text: '能運用「人物+地方+活動」的三詞句表達；能沿手掌畫線；能抄寫部份英文字母，如：E、F、H、I、L、T；能雙手接回彈地的8吋膠球' },
-
-      // 2. 李澄 (9月、10月、11月個別及二人小組流程表)
-      { childName: '李澄', date: '29/09', type: '小組', progress: 'Ve/Vi', text: '在熟悉話題下，能作適當的回應以保持簡單輪序對話2至3回' },
-      { childName: '李澄', date: '08/10', type: '入班', progress: 'Ve/Vi', text: '在熟悉話題下，能作適當的回應以保持簡單輪序對話2至3回；在成人指示下，能跟從簡單的遊戲規則，如：正確地輪序擲骰子、按骰子點數行棋' },
-      { childName: '李澄', date: '08/10', type: '小組', progress: 'Ve/Vi', text: '能運用連接詞「首先、然後/跟住、最後」表達時序關係；在熟悉話題下，能作適當的回應以保持簡單輪序對話2至3回；在成人指示下，能跟從簡單的遊戲規則' },
-      { childName: '李澄', date: '12/10', type: '入班', progress: 'Vi/Ve', text: '能按老師指示完成小差事；能運用連接詞「首先、然後/跟住、最後」表達時序關係' },
-      { childName: '李澄', date: '20/10', type: '個別', progress: 'Ve/Vi', text: '能明白3個步驟指令；能運用連接詞「首先、然後/跟住、最後」表達時序關係；能運用連接詞「如果⋯就⋯」表達條件關係；能指出四張剛見過的相片；能將紙張對角摺成三角形；能抄寫簡單中文字5個' },
-      { childName: '李澄', date: '06/11', type: '小組', progress: '待填', text: '能明白3個步驟指令；能運用連接詞「首先、然後/跟住、最後」表達時序關係；在熟悉話題下，能作適當的回應以保持簡單輪序對話2至3回；在成人指示下，能跟從簡單的遊戲規則' },
-      { childName: '李澄', date: '09/11', type: '入班', progress: '待填', text: '在熟悉話題下，能作適當的回應以保持簡單輪序對話2至3回；能按老師指示完成小差事；能把兩項物件分類，如︰交通工具、食物' },
-      { childName: '李澄', date: '16/11', type: '入班', progress: '待填', text: '能將紙張對角摺成三角形；能沿1/4吋粗的線剪出直徑約4吋大的圓形；在成人指示下，能跟從簡單的遊戲規則' },
-      { childName: '李澄', date: '16/11', type: '個別', progress: '待填', text: '能單手下手拋網球至5呎遠2呎X2呎的目標；能明白3個步驟指令；能運用連接詞「首先、然後/跟住、最後」表達時序關係；能抄寫簡單中文字5個' },
-      { childName: '李澄', date: '17/11', type: '小組', progress: '待填', text: '能明白3個步驟指令；能把兩項物件分類；能運用連接詞「如果⋯就⋯」表達條件關係；在熟悉話題下，能作適當的回應以保持簡單輪序對話2至3回' },
-
-      // 3. 蘇予芯 (10月、11月個別及二人小組流程表)
-      { childName: '蘇予芯', date: '08/10', type: '小組', progress: 'Vi/Ve', text: '能運用連接詞「首先、然後/跟住、最後」表達時序關係；能主動分享日常生活體驗或喜好；當別人要求澄清或解釋時，能嘗試調整或修改說話內容' },
-      { childName: '蘇予芯', date: '20/10', type: '入班', progress: 'Ve/Vi', text: '能用筷子夾食物入口，三次有兩次成功；能主動分享日常生活體驗或喜好' },
-      { childName: '蘇予芯', date: '22/10', type: '入班', progress: 'Vi/Ve', text: '當別人要求澄清或解釋時，能嘗試調整或修改說話內容；能說出不同的形狀名稱，如︰圓形、三角形；能自行拉拉鍊' },
-      { childName: '蘇予芯', date: '27/10', type: '個別', progress: 'Ve/Vi', text: '能運用連接詞「首先、然後/跟住、最後」表達時序關係；能運用補語來擴充連動句表達；能用筆連點，畫一個正方形；能於2厘米X 2厘米的方格內抄寫由直線+曲線組成的英文字母；能說出物件名稱(日常生活用品)；能雙腳同步跳過10吋高的障礙物' },
-      { childName: '蘇予芯', date: '06/11', type: '小組', progress: '待填', text: '能運用連接詞「首先、然後/跟住、最後」表達時序關係；能說出物件名稱(日常生活用品)；能主動分享日常生活體驗或喜好；當別人要求澄清或解釋時，能嘗試調整或修改說話內容' },
-      { childName: '蘇予芯', date: '09/11', type: '入班', progress: '待填', text: '能主動分享日常生活體驗或喜好；能自行拉拉鍊；能說出物件名稱(日常生活用品)' },
-      { childName: '蘇予芯', date: '13/11', type: '個別', progress: '待填', text: '能運用連接詞「首先、然後/跟住、最後」表達時序關係；能運用補語來擴充連動句表達；能說出不同的形狀名稱；能用筆連點，畫一個正方形' },
-      { childName: '蘇予芯', date: '16/11', type: '入班', progress: '待填', text: '能順數背誦1至20；當別人要求澄清或解釋時，能嘗試調整或修改說話內容；能於2厘米X 2厘米的方格內抄寫由直線+曲線組成的英文字母' },
-      { childName: '蘇予芯', date: '17/11', type: '小組', progress: '待填', text: '能運用補語來擴充連動句表達；能順數背誦1至20；當別人要求澄清或解釋時，能嘗試調整或修改說話內容；能主動分享日常生活體驗或喜好' },
-
-      // 4. 陳諾彤 (10月、11月個別及二人小組流程表)
-      { childName: '陳諾彤', date: '06/10', type: '小組', progress: 'Vi/Ve', text: '在成人指示下，能跟從簡單的遊戲規則；能依序排列三張程序圖卡；能說出時序連接詞：首先、跟住、之後、然後、最後；能與別人傾談有關過去或未來的事情' },
-      { childName: '陳諾彤', date: '08/10', type: '入班', progress: 'Ve/Vi', text: '在成人指示下，能跟從簡單的遊戲規則；能認讀大楷字母咭A-Z；能在4吋闊8呎長的直線上向前步行8呎遠' },
-      { childName: '陳諾彤', date: '15/10', type: '個別', progress: 'Vi/Ve', text: '能依序排列三張程序圖卡；能說出時序連接詞：首先、跟住、之後、然後、最後；能抄寫部份英文字母，如：E、F、H、I、L、T；能仿寫簡單中文字5個；能用筷子扒食物入口；能認讀大楷字母咭A-Z' },
-      { childName: '陳諾彤', date: '22/10', type: '入班', progress: 'Ve/Vi', text: '能與別人傾談有關過去或未來的事情；能仿寫簡單中文字5個；能垂手向後拉，並扭動上身，將網球拋向前10呎遠；能雙手手掌接著由5呎遠拋來的8吋膠球' },
-      { childName: '陳諾彤', date: '05/11', type: '入班', progress: 'Ve/Vi', text: '在成人指示下，能跟從簡單的遊戲規則；能用筷子扒食物入口；能說出時序連接詞：首先、跟住、之後、然後、最後' },
-      { childName: '陳諾彤', date: '09/11', type: '入班', progress: '待填', text: '能與別人傾談有關過去或未來的事情；能認讀大楷字母咭A-Z；能抄寫部份英文字母，如：E、F、H、I、L、T' },
-      { childName: '陳諾彤', date: '17/11', type: '個別', progress: '待填', text: '能依序排列三張程序圖卡；能說出時序連接詞：首先、跟住、之後、然後、最後；能抄寫部份英文字母，如：E、F、H、I、L、T；能在4吋闊8呎長的直線上向前步行8呎遠' },
-      { childName: '陳諾彤', date: '19/11', type: '個別', progress: '待填', text: '能與別人傾談有關過去或未來的事情；能仿寫簡單中文字5個；能雙手手掌接著由5呎遠拋來的8吋膠球；能垂手向後拉，並扭動上身，將網球拋向前10呎遠' },
-
-      // 5. 黃芊淳 (10月、11月個別及二人小組流程表)
-      { childName: '黃芊淳', date: '08/10', type: '入班', progress: 'Ve/Vi', text: '能自己計劃想做的事，並付諸實行，如：畫心意卡；面對困難或挫敗時，願意積極嘗試或尋求協助' },
-      { childName: '黃芊淳', date: '12/10', type: '入班', progress: 'Vi/Ve', text: '能用不同物料砌出圖形，如：三角形；能沿手掌畫線；能運用適當方法紓解負面情緒，如：深呼吸、向成人分享經歷' },
-      { childName: '黃芊淳', date: '15/10', type: '個別', progress: 'Ve/Vi', text: '能指出圖畫中不恰當的行為，解釋原因，並提出改善方法；能在敘述個人過去發生的事件時，交代故事的起因、經過及結果；能抄寫簡單中文字5個；能用鉛筆刨刨鉛筆；能雙手手掌接著由5呎遠拋來的8吋膠球；能單手下手拋網球至5呎遠2呎X2呎的目標' },
-      { childName: '黃芊淳', date: '20/10', type: '小組', progress: 'Ve/Vi', text: '能在群體中主動舉手回答問題、要求參與活動；能在敘述個人過去發生的事件時，交代故事的起因、經過及結果；能指出圖畫中不恰當的行為，解釋原因，並提出改善方法' },
-      { childName: '黃芊淳', date: '05/11', type: '入班', progress: 'Ve/Vi', text: '能在群體中主動舉手回答問題、要求參與活動或答應協助完成小差事；面對困難或挫敗時，願意積極嘗試或尋求協助；能自行把外衣套在衣架上，並將衣架掛在掛鈎上' },
-      { childName: '黃芊淳', date: '09/11', type: '入班', progress: '待填', text: '能自己計劃想做的事，並付諸實行，如：畫心意卡；能雙手手掌接著由5呎遠拋來的8吋膠球；能單手下手拋網球至5呎遠2呎X2呎的目標' },
-      { childName: '黃芊淳', date: '12/11', type: '個別', progress: '待填', text: '能指出圖畫中不恰當的行為，解釋原因，並提出改善方法；能抄寫簡單中文字5個；能用鉛筆刨刨鉛筆；能單手下手拋網球至5呎遠2呎X2呎的目標' },
-      { childName: '黃芊淳', date: '13/11', type: '入班', progress: '待填', text: '面對困難或挫敗時，願意積極嘗試或尋求協助；能單手下手拋網球至5呎遠2呎X2呎的目標；能雙手手掌接著由5呎遠拋來的8吋膠球；能在群體中主動舉手回答問題' },
-      { childName: '黃芊淳', date: '16/11', type: '入班', progress: '待填', text: '能在敘述個人過去發生的事件時，交代故事的起因、經過及結果；能雙手手掌接著由5呎遠拋來的8吋膠球；能運用適當方法紓解負面情緒；能在群體中主動舉手回答問題' },
-      { childName: '黃芊淳', date: '19/11', type: '入班', progress: '待填', text: '能自己計劃想做的事，並付諸實行，如：畫心意卡；能用不同物料砌出圖形，如：三角形；能自行把外衣套在衣架上，並將衣架掛在掛鈎上' },
-
-      // 6. 布晫逸 (10月、11月個別及二人小組流程表)
-      { childName: '布晫逸', date: '06/10', type: '個別', progress: 'Ve/Vi', text: '能說出標示地點或空間關係的短語，如：擺襪喺籃度；能認讀大楷字母咭A-G；能用4至6條雪條棒仿砌簡單英文字母；能模仿成人，用手指做出不同的手勢；能用筷子扒食物入口' },
-      { childName: '布晫逸', date: '13/10', type: '個別', progress: 'Vi/Ve', text: '能說出時序連接詞：首先、跟住、之後、然後、最後；能抄寫部份英文字母，如：E、F、H、I、L、T；能以雙手交替動作把0.25厘米的珠粒拉過繩子；能原地單腳跳2下；能單手上手擲網球至5呎遠2呎X2呎的目標' },
-      { childName: '布晫逸', date: '23/10', type: '小組', progress: 'Ve/Vi', text: '在成人指示下，能跟從簡單的遊戲規則；能說出標示地點或空間關係的短語，如：擺襪喺籃度；能主動分享日常生活體驗或喜好' },
-      { childName: '布晫逸', date: '27/10', type: '入班', progress: 'Ve/Vi', text: '在成人指示下，能跟從簡單的遊戲規則；能主動分享日常生活體驗或喜好；能說出標示地點或空間關係的短語，如：擺襪喺籃度' },
-      { childName: '布晫逸', date: '03/11', type: '個別', progress: 'Vi/Ve', text: '能認讀大楷字母咭A-G；能抄寫部份英文字母，如：E、F、H、I、L、T；在成人指示下，能跟從簡單的遊戲規則' },
-      { childName: '布晫逸', date: '05/11', type: '入班', progress: 'Ve/Vi', text: '在成人指示下，能跟從簡單的遊戲規則；能說出標示地點或空間關係的短語；能說出時序連接詞：首先、跟住、之後、然後、最後' },
-      { childName: '布晫逸', date: '06/11', type: '入班', progress: 'Vi/Ve', text: '能說出時序連接詞：首先、跟住、之後、然後、最後；能主動分享日常生活體驗或喜好；能說出標示地點或空間關係的短語' },
-      { childName: '布晫逸', date: '13/11', type: '入班', progress: '待填', text: '能認讀大楷字母咭A-G；能抄寫部份英文字母，如：E、F、H、I、L、T；能模仿成人，用手指做出不同的手勢' },
-      { childName: '布晫逸', date: '17/11', type: '個別', progress: '待填', text: '能說出標示地點或空間關係的短語；能用4至6條雪條棒仿砌簡單英文字母；能認讀大楷字母咭A-G；能以雙手交替動作把0.25厘米的珠粒拉過繩子' },
-      { childName: '布晫逸', date: '19/11', type: '入班', progress: '待填', text: '能說出時序連接詞：首先、跟住、之後、然後、最後；能主動分享日常生活體驗或喜好；能用筷子扒食物入口' },
-
-      // 7. 胡淳壹 (10月、11月個別及二人小組流程表)
-      { childName: '胡淳壹', date: '08/10', type: '入班', progress: 'Ve/Vi', text: '能雙手手掌接著由5呎遠拋來的8吋膠球；能垂手向後拉，並扭動上身，將網球拋至5呎遠2呎X2呎的目標；能用學習筷子扒食物入口；能向別人發問以尋求資訊；能配合地方及活動回答「邊度」(哪裡) 的問題' },
-      { childName: '胡淳壹', date: '13/10', type: '個別', progress: 'Vi/Ve', text: '能說出連謂謂語句-表達事件目的，如：姐姐去公園玩波；能說出物件名稱(日用品類)，如︰雨傘、毛巾；能抄寫部份英文字母，如：E、F、H、I、L、T；能在紙上畫一個有三個身體部份的人；在熟悉話題下，能作適當的回應以保持簡單輪序對話2至3回' },
-      { childName: '胡淳壹', date: '23/10', type: '小組', progress: 'Vi/Ve', text: '在熟悉話題下，能作適當的回應以保持簡單輪序對話2至3回；能說出連謂謂語句-表達事件目的；能向別人發問以尋求資訊' },
-      { childName: '胡淳壹', date: '03/11', type: '個別', progress: 'Ve/Vi', text: '能配合地方及活動回答「邊度」(哪裡) 的問題；能說出連謂謂語句-表達事件目的；能抄寫部份英文字母，如：E、F、H、I、L、T' },
-      { childName: '胡淳壹', date: '05/11', type: '入班', progress: '待填', text: '能向別人發問以尋求資訊；能說出物件名稱(日用品類)；能用學習筷子扒食物入口' },
-      { childName: '胡淳壹', date: '12/11', type: '個別', progress: '待填', text: '能說出物件名稱(日用品類)；能配合地方及活動回答「邊度」(哪裡) 的問題；能在紙上畫一個有三個身體部份的人；能雙手手掌接著由5呎遠拋來的8吋膠球' },
-      { childName: '胡淳壹', date: '30/11', type: '入班', progress: '待填', text: '能配合地方及活動回答「邊度」(哪裡) 的問題；能說出連謂謂語句-表達事件目的；在熟悉話題下，能作適當的回應以保持簡單輪序對話2至3回' },
-
-      // 8. 黃梓涵 (10月、11月個別及二人小組流程表)
-      { childName: '黃梓涵', date: '06/10', type: '入班', progress: 'Ve/Vi', text: '能明白簡單故事內容並回答直接的問題；自己的要求未能被滿足時，願意忍耐或接受；當別人要求澄清或解釋時，能嘗試調整或修改說話內容；能寫出自己姓名；能指出自己的左邊、右邊' },
-      { childName: '黃梓涵', date: '13/10', type: '個別', progress: 'Vi/Ve', text: '能運用連接詞「雖然⋯但係⋯」表達轉折關係；能觀察到及說出不妥當的地方，加以解釋及提供解決方法；能回答生活上的如果問題；能雙手接回自行拋高的豆袋；能單手接回彈地的網球' },
-      { childName: '黃梓涵', date: '23/10', type: '小組', progress: 'Ve/Vi', text: '自己的要求未能被滿足時，願意忍耐或接受；當別人要求澄清或解釋時，能嘗試調整或修改說話內容；能回答生活上的如果問題' },
-      { childName: '黃梓涵', date: '03/11', type: '入班', progress: 'Ve/Vi', text: '能回答生活上的如果問題；自己的要求未能被滿足時，願意忍耐或接受' },
-      { childName: '黃梓涵', date: '03/11', type: '個別', progress: 'Ve/Vi', text: '能明白簡單故事內容並回答直接的問題；能運用連接詞「雖然⋯但係⋯」表達轉折關係；能寫出自己姓名' },
-      { childName: '黃梓涵', date: '17/11', type: '入班', progress: '待填', text: '能觀察到及說出不妥當的地方，加以解釋及提供解決方法；能回答生活上的如果問題；當別人要求澄清或解釋時，能嘗試調整或修改說話內容' },
-      { childName: '黃梓涵', date: '30/11', type: '小組', progress: '待填', text: '自己的要求未能被滿足時，願意忍耐或接受；當別人要求澄清或解釋時，能嘗試調整或修改說話內容；能觀察到及說出不妥當的地方，加以解釋及提供解決方法；能回答生活上的如果問題' },
-
-      // 9. 姜懿恩 (10月、11月個別及二人小組流程表)
-      { childName: '姜懿恩', date: '08/10', type: '入班', progress: 'Ve/Vi', text: '不需成人指示，能公平地參與競賽遊戲並遵守遊戲規則；能分辨衣物的正反面及將衣物翻回正面穿著；能指出自己的左邊、右邊' },
-      { childName: '姜懿恩', date: '20/10', type: '小組', progress: 'Vi/Ve', text: '不需成人指示，能公平地參與競賽遊戲並遵守遊戲規則；能在重述故事時，交代故事背景 (時、人、地、事)；能表達及解釋自己的想法及意見' },
-      { childName: '姜懿恩', date: '27/10', type: '入班', progress: 'Vi/Ve', text: '能連續跳繩3下；能表達及解釋自己的想法及意見' },
-      { childName: '姜懿恩', date: '29/10', type: '個別', progress: 'Ve/Vi', text: '能在重述故事時，交代故事背景 (時、人、地、事)；能明白「幾時？」問句；能運用連接詞「雖然⋯但係⋯」表達轉折關係；能根據提供的條件〔類別、特徵〕，列舉四至五個例子；能計算10以內的加法；能抄寫較複雜中文字' },
-      { childName: '姜懿恩', date: '02/11', type: '個別', progress: 'Vi/Ve', text: '能在重述故事時，交代故事背景 (時、人、地、事)；能根據提供的條件〔類別、特徵〕，列舉四至五個例子；能計算10以內的加法' },
-      { childName: '姜懿恩', date: '05/11', type: '入班', progress: '待填', text: '不需成人指示，能公平地參與競賽遊戲並遵守遊戲規則；能表達及解釋自己的想法及意見；能分辨衣物的正反面及將衣物翻回正面穿著' },
-      { childName: '姜懿恩', date: '19/11', type: '入班', progress: '待填', text: '能明白「幾時？」問句；能表達及解釋自己的想法及意見；能指出自己的左邊、右邊' },
-      { childName: '姜懿恩', date: '30/11', type: '個別', progress: '待填', text: '能在重述故事時，交代故事背景 (時、人、地、事)；能運用連接詞「雖然⋯但係⋯」表達轉折關係；能抄寫較複雜中文字；能連續跳繩3下' },
-
-      // 10. 黃芊悅 (10月、11月個別及二人小組流程表)
-      { childName: '黃芊悅', date: '06/10', type: '小組', progress: 'Ve/Vi', text: '能用說話邀請其他幼童一起玩耍；能運用連接詞「雖然⋯但係⋯」表達轉折關係；面對困難或挫敗時，願意積極嘗試或尋求協助' },
-      { childName: '黃芊悅', date: '12/10', type: '入班', progress: 'Ve/Vi', text: '能用說話邀請其他幼童一起玩耍；面對困難或挫敗時，願意積極嘗試或尋求協助；能在群體中主動舉手回答問題' },
-      { childName: '黃芊悅', date: '27/10', type: '入班', progress: 'Vi/Ve', text: '能在群體中主動舉手回答問題；能運用連接詞「雖然⋯但係⋯」表達轉折關係' },
-      { childName: '黃芊悅', date: '29/10', type: '個別', progress: 'Ve/Vi', text: '能運用連接詞「雖然⋯但係⋯」表達轉折關係；能說出組合圖內形狀的名稱；能用筆連點，畫一個正方形；能在2吋直徑圓形內填色不出界；能仿寫複雜中文字5個；能雙手接回彈地的8吋膠球；左右腳均能連續單腳向前跳4下' },
-      { childName: '黃芊悅', date: '05/11', type: '小組', progress: 'Ve/Vi', text: '能用說話邀請其他幼童一起玩耍；能運用連接詞「雖然⋯但係⋯」表達轉折關係；面對困難或挫敗時，願意積極嘗試或尋求協助；能說出組合圖內形狀的名稱' },
-      { childName: '黃芊悅', date: '12/11', type: '入班', progress: '待填', text: '能雙手接回彈地的8吋膠球；能用筆連點，畫一個正方形；能說出組合圖內形狀的名稱' },
-      { childName: '黃芊悅', date: '17/11', type: '入班', progress: '待填', text: '面對困難或挫敗時，願意積極嘗試或尋求協助；能在2吋直徑圓形內填色不出界；能用筷子夾食物入口' },
-      { childName: '黃芊悅', date: '30/11', type: '小組', progress: '待填', text: '能用說話邀請其他幼童一起玩耍；能運用連接詞「雖然⋯但係⋯」表達轉折關係；面對困難或挫敗時，願意積極嘗試或尋求協助；能說出組合圖內形狀的名稱' },
-
-      // 11. 劉弈泓 (9月、11月個別及二人小組流程表)
-      { childName: '劉弈泓', date: '10/09', type: '小組', progress: 'Ve/Vi', text: '能與別人討論及協商條件；能回答生活上的如果問題；能根據提供的條件〔類別、特徵〕，列舉四至五個例子' },
-      { childName: '劉弈泓', date: '05/11', type: '小組', progress: 'Ve/Vi', text: '能與別人討論及協商條件；能回答生活上的如果問題；能運用連接詞「如果⋯就⋯」表達條件關係；能根據提供的條件〔類別、特徵〕，列舉四至五個例子' },
-      { childName: '劉弈泓', date: '06/11', type: '個別', progress: '待填', text: '能運用連接詞「如果⋯就⋯」表達條件關係；能回答生活上的如果問題；能計算10以內的加法；能仿畫菱形' },
-      { childName: '劉弈泓', date: '06/11', type: '入班', progress: '待填', text: '能與別人討論及協商條件；有特別需要時能先請示老師；能自行擺放每份食具及收拾食具' },
-      { childName: '劉弈泓', date: '30/11', type: '入班', progress: '待填', text: '能運用適當方法紓解負面情緒；能在重述故事時運用連接詞「然後」及「最後」連接故事內容；能沿線剪出圓形' },
-
-      // 12. 陳彥勻 (9月、10月、11月個別及二人小組流程表)
-      { childName: '陳彥勻', date: '10/09', type: '小組', progress: 'Ve', text: '表達及解釋自己的想法及意見；主動向別人提出解難方法或建議；圍繞同一話題，持續地回應及發問以保持輪序對話' },
-      { childName: '陳彥勻', date: '08/10', type: '入班', progress: 'Ve/Vi', text: '圍繞同一話題，持續地回應及發問以保持輪序對話；表達及解釋自己的想法及意見；主動向別人提出解難方法或建議；能回答生活上的如果問題；能自行綁好鞋帶' },
-      { childName: '陳彥勻', date: '20/10', type: '個別', progress: 'Vi/Ve', text: '能就物件的種類、用途、主要特徵，來為物件下定義；能認讀複雜中文字(校本課程)；能抄寫較複雜中文字，如：花、過、飛；能在4吋闊8呎長的直線上腳跟貼腳尖向後步行8呎遠；能暢順地完成雙腳跳轉單腳跳向前連續2組' },
-      { childName: '陳彥勻', date: '27/10', type: '個別', progress: 'Ve/Vi', text: '能在敘述個人過去發生的事件時，交代故事的起因、經過及結果；能用筷子夾食物入口；主動向別人提出解難方法或建議；能抄寫較複雜中文字；能自行綁好鞋帶' },
-      { childName: '陳彥勻', date: '05/11', type: '小組', progress: 'Ve/Vi', text: '表達及解釋自己的想法及意見；能回答生活上的如果問題；主動向別人提出解難方法或建議；圍繞同一話題，持續地回應及發問以保持輪序對話' },
-      { childName: '陳彥勻', date: '05/11', type: '入班', progress: 'Vi/Ve', text: '能用筷子夾食物入口；表達及解釋自己的想法及意見；能回答生活上的如果問題' },
-      { childName: '陳彥勻', date: '06/11', type: '個別', progress: '待填', text: '能就物件的種類、用途、主要特徵，來為物件下定義；能認讀複雜中文字(校本課程)；能抄寫較複雜中文字；能自行綁好鞋帶' },
-      { childName: '陳彥勻', date: '13/11', type: '入班', progress: '待填', text: '圍繞同一話題，持續地回應及發問以保持輪序對話；主動向別人提出解難方法或建議；能在敘述個人過去發生的事件時，交代故事的起因、經過及結果' },
-
-      // 13. 黃芷悠 (10月、11月個別及入班流程表)
-      { childName: '黃芷悠', date: '08/10', type: '入班', progress: 'Ve/Vi', text: '能用說話回應簡單問題；能運用「動作+物件」的雙詞句表達；能用說話要求協助，如：「幫我」' },
-      { childName: '黃芷悠', date: '15/10', type: '個別', progress: 'Vi/Ve', text: '能說出10個新詞彙 (動物、人物)；能運用「人物+動作」的雙詞句表達；能說出四種顏色的名稱；能將兩塊積木向橫排列；能把毛巾整齊地對摺；能將漿糊塗在圖形上' },
-      { childName: '黃芷悠', date: '22/10', type: '入班', progress: 'Ve/Vi', text: '能說出10個新詞彙 (動物、人物)；能認讀1至3；能說出四種顏色的名稱' },
-      { childName: '黃芷悠', date: '23/10', type: '個別', progress: 'Vi/Ve', text: '能運用「動作+物件」的雙詞句表達；能認讀1至3；能將兩塊積木向橫排列；能在4吋闊8呎長的直線上向前步行6步；能雙手手掌接著由5呎遠拋來的8吋膠球' },
-      { childName: '黃芷悠', date: '03/11', type: '個別', progress: 'Ve/Vi', text: '能說出10個新詞彙 (動物、人物)；能說出四種顏色的名稱；能把毛巾整齊地對摺' },
-      { childName: '黃芷悠', date: '05/11', type: '入班', progress: '待填', text: '能用說話回應簡單問題；能將漿糊塗在圖形上；能說出四種顏色的名稱' },
-      { childName: '黃芷悠', date: '09/11', type: '入班', progress: '待填', text: '能運用「動作+物件」的雙詞句表達；能用說話要求協助，如：「幫我」；能在4吋闊8呎長的直線上向前步行6步' },
-      { childName: '黃芷悠', date: '10/11', type: '個別', progress: '待填', text: '能說出10個新詞彙 (動物、人物)；能運用「人物+動作」的雙詞句表達；能將兩塊積木向橫排列；能雙手手掌接著由5呎遠拋來的8吋膠球' },
-      { childName: '黃芷悠', date: '17/11', type: '入班', progress: '待填', text: '能認讀1至3；能將兩塊積木向橫排列；能穿上外套' },
-      { childName: '黃芷悠', date: '30/11', type: '入班', progress: '待填', text: '能說出10個新詞彙 (動物、人物)；能穿上鞋子；能用說話要求協助，如：「幫我」' },
-
-      // 14. 王雨仟 (9月、10月個別及二人小組流程表)
-      { childName: '王雨仟', date: '23/09', type: '個別', progress: 'Ve/Vi', text: '能運用「人物+動作」的雙詞句表達；能說出四種顏色的名稱，如︰紅、黃、藍、綠' },
-      { childName: '王雨仟', date: '08/10', type: '入班', progress: '待填', text: '能用說話表達要求，如：「飲奶」、「開門」；能運用「人物+動作」的雙詞句表達' },
-      { childName: '王雨仟', date: '12/10', type: '入班', progress: '待填', text: '能用說話要求協助，如：「幫我」；能說出四種顏色的名稱；能將漿糊塗在圖形上' },
-      { childName: '王雨仟', date: '22/10', type: '小組', progress: 'Ve/Vi', text: '能運用「人物+動作」的雙詞句表達；能說出四種顏色的名稱；能用說話要求協助，如：「幫我」' },
-      { childName: '王雨仟', date: '29/10', type: '個別', progress: 'Ve/Vi', text: '能運用「人物+動作」的雙詞句表達；能說出四種顏色的名稱；能挑選圖片(1:3)' },
-
-      // 15. 高仟潼 (10月二人小組流程表)
-      { childName: '高仟潼', date: '22/10', type: '小組', progress: 'Vi/Ve', text: '能運用「人物+動作」的雙詞句表達；能說出四種顏色的名稱；能用說話表達要求，如：「飲奶」、「開門」' },
-
-      // 16–26. 方換 T1 名單 (9月、10月流程表)
-      { childName: '譚芷玄', date: '15/09', type: '入班', progress: 'Vi', text: '能説出常見的物品名稱，如：食物類、餐具類' },
-      { childName: '譚芷玄', date: '23/09', type: '入班', progress: 'Ve', text: '能説出常見的物品名稱，如：食物類、餐具類' },
-      { childName: '譚芷玄', date: '29/09', type: '入班', progress: 'Ve', text: '能説出常見的物品名稱，如：食物類、餐具類' },
-      { childName: '譚芷玄', date: '06/10', type: '入班', progress: 'Ve', text: '能説出常見的物品名稱，如：食物類、餐具類' },
-      { childName: '譚芷玄', date: '23/10', type: '入班', progress: 'Vi', text: '能説出常見的物品名稱，如：食物類、餐具類' },
-      { childName: '譚芷玄', date: '26/10', type: '入班', progress: 'Ve', text: '能説出常見的物品名稱，如：食物類、餐具類' },
-
-      { childName: '陳奕辰', date: '21/09', type: '入班', progress: 'Ve', text: '能用簡單語句向成人表達要求，獲得同意後再行動' },
-      { childName: '陳奕辰', date: '24/09', type: '入班', progress: 'Ve', text: '能用簡單語句向成人表達要求，獲得同意後再行動' },
-      { childName: '陳奕辰', date: '30/09', type: '入班', progress: 'Ve', text: '能用簡單語句向成人表達要求，獲得同意後再行動' },
-      { childName: '陳奕辰', date: '20/10', type: '入班', progress: 'Ve', text: '能用簡單語句向成人表達要求，獲得同意後再行動' },
-      { childName: '陳奕辰', date: '23/10', type: '入班', progress: 'Vi', text: '能用簡單語句向成人表達要求，獲得同意後再行動' },
-      { childName: '陳奕辰', date: '26/10', type: '入班', progress: 'Ve', text: '能用簡單語句向成人表達要求，獲得同意後再行動' },
-      { childName: '陳奕辰', date: '26/10', type: '小組', progress: 'Ve/Vi', text: '能用簡單語句向成人表達要求，獲得同意後再行動' },
-
-      { childName: '賴芊焮', date: '21/09', type: '入班', progress: 'Ve', text: '在成人帶領下，能與幼兒參與簡單競賽遊戲' },
-      { childName: '賴芊焮', date: '24/09', type: '入班', progress: 'Ve', text: '在成人帶領下，能與幼兒參與簡單競賽遊戲' },
-      { childName: '賴芊焮', date: '30/09', type: '入班', progress: 'Ve', text: '在成人帶領下，能與幼兒參與簡單競賽遊戲' },
-      { childName: '賴芊焮', date: '12/10', type: '入班', progress: 'Ve', text: '在成人帶領下，能與幼兒參與簡單競賽遊戲，並在競賽遊戲中接受贏輸' },
-      { childName: '賴芊焮', date: '23/10', type: '入班', progress: 'Vi', text: '在成人帶領下，能與幼兒參與簡單競賽遊戲，並在競賽遊戲中接受贏輸' },
-      { childName: '賴芊焮', date: '26/10', type: '入班', progress: 'Ve', text: '在成人帶領下，能與幼兒參與簡單競賽遊戲，並在競賽遊戲中接受贏輸' },
-      { childName: '賴芊焮', date: '26/10', type: '小組', progress: 'Vi/Ve', text: '在成人帶領下，能與幼兒參與簡單競賽遊戲，並在競賽遊戲中接受贏輸' },
-
-      { childName: '朱稙進', date: '15/09', type: '入班', progress: 'Ve', text: '能運用簡單連接詞，如：「因為… 所以…」' },
-      { childName: '朱稙進', date: '17/09', type: '入班', progress: 'Ve', text: '能運用簡單連接詞，如：「因為… 所以…」' },
-      { childName: '朱稙進', date: '24/09', type: '入班', progress: 'Ve', text: '能運用簡單連接詞，如：「因為… 所以…」' },
-      { childName: '朱稙進', date: '23/10', type: '入班', progress: 'Ve', text: '能運用簡單連接詞，如：「因為… 所以…」' },
-      { childName: '朱稙進', date: '26/10', type: '入班', progress: 'Vi', text: '能運用簡單連接詞，如：「因為… 所以…」' },
-      { childName: '朱稙進', date: '29/10', type: '入班', progress: 'Ve', text: '能運用簡單連接詞，如：「因為… 所以…」' },
-
-      // 27–28. 慧妍：李承燁、辛玥昕 (9月、10月、11月流程表)
-      { childName: '李承燁', date: '14/09', type: '小組', progress: 'Ve/I', text: '能表達及解釋自己的想法及意見；能雙手接回自行拋高的豆袋' },
-      { childName: '李承燁', date: '05/10', type: '個別', progress: 'Ve/Vi', text: '能表達及解釋自己的想法及意見；能仿寫複雜中文字5個；能就故事背景推算故事發展；能雙手接回自行拋高的豆袋' },
-      { childName: '李承燁', date: '05/10', type: '入班', progress: 'Ve/Vi', text: '能表達及解釋自己的想法及意見；能仿寫複雜中文字5個；能根據情況提供可行合理的解決辦法' },
-      { childName: '李承燁', date: '13/10', type: '小組', progress: 'Ve', text: '能表達及解釋自己的想法及意見；能用說話安慰和幫助別人；能雙手接回自行拋高的豆袋' },
-      { childName: '李承燁', date: '16/11', type: '小組', progress: '待填', text: '能表達及解釋自己的想法及意見；能就故事背景推算故事發展；能左右腳輪流踏跳10呎' },
-
-      { childName: '辛玥昕', date: '01/09', type: '入班', progress: 'Ve/Vi', text: '能用說話邀請其他幼童一起玩耍；能抄寫部份英文字母，如：E、F、H、I、L、T；能認讀大楷H-Z；能數出10以內數量的物件' },
-      { childName: '辛玥昕', date: '01/09', type: '入班', progress: 'Vi/Ve', text: '能在提問下解釋引發情緒的起因；能運用連接詞「首先、然後/跟住、最後」表達時序關係；能沿手掌畫線；能單手上手擲網球向前10呎遠' },
-      { childName: '辛玥昕', date: '08/09', type: '個別', progress: 'Ve/Vi', text: '能排列4張程序圖卡；能運用連接詞「首先、然後/跟住、最後」表達時序關係；能抄寫部份英文字母，如：E、F、H、I、L、T；能認讀大楷H-Z；能數出10以內數量的物件' },
-      { childName: '辛玥昕', date: '14/09', type: '小組', progress: 'Ve/Vi', text: '能用說話邀請其他幼童一起玩耍；能雙手手掌接著由5呎遠拋來的8吋膠球；能運用連接詞「首先、然後/跟住、最後」表達時序關係' },
-      { childName: '辛玥昕', date: '13/10', type: '個別', progress: 'Ve/Vi', text: '能排列4張程序圖卡；能運用連接詞「首先、然後/跟住、最後」表達時序關係；能認讀大楷H-Z；能抄寫部份英文字母；能單手上手擲網球向前10呎遠；能雙手手掌接著由5呎遠拋來的8吋膠球' },
-      { childName: '辛玥昕', date: '13/10', type: '入班', progress: 'Ve/Vi', text: '能用說話邀請其他幼童一起玩耍；能在提問下解釋引發情緒的起因；能數出10以內數量的物件；能用筆連點，畫一個正方形；能自行拉拉鍊' },
-      { childName: '辛玥昕', date: '13/10', type: '小組', progress: 'Ve/Vi', text: '能用說話邀請其他幼童一起玩耍；能在提問下解釋引發情緒的起因；能雙手手掌接著由5呎遠拋來的8吋膠球' },
-      { childName: '辛玥昕', date: '26/10', type: '入班', progress: 'Vi/Ve', text: '能在提問下解釋引發情緒的起因；能運用連接詞「首先、然後/跟住、最後」表達時序關係；能沿手掌畫線；能抄寫部份英文字母；能用說話邀請其他幼童一起玩耍' },
-      { childName: '辛玥昕', date: '02/11', type: '入班', progress: 'Ve/Vi', text: '能用說話邀請其他幼童一起玩耍；能排列4張程序圖卡；能自行拉拉鍊' },
-      { childName: '辛玥昕', date: '09/11', type: '個別', progress: '待填', text: '能在提問下解釋引發情緒的起因；能排列4張程序圖卡；能抄寫部份英文字母；能單手上手擲網球向前10呎遠' },
-      { childName: '辛玥昕', date: '16/11', type: '入班', progress: '待填', text: '能運用連接詞「首先、然後/跟住、最後」表達時序關係；能沿手掌畫線；能用筆連點，畫一個正方形；能數出10以內數量的物件' },
-      { childName: '辛玥昕', date: '16/11', type: '小組', progress: '待填', text: '能用說話邀請其他幼童一起玩耍；能排列4張程序圖卡；能雙手手掌接著由5呎遠拋來的8吋膠球' },
-
-      // 32–35. 蔡繼有：彭葆峰、黃懿祈、莫若燊、鄺庭萱 (9月、11月流程表)
-      { childName: '彭葆峰', date: '02/09', type: '個別', progress: 'Ve/Vi', text: '能說出標示地點或空間關係的短語，如：擺襪喺籃度；能認讀1-3；能把兩項物件分類；能將漿糊塗在圖形上' },
-      { childName: '彭葆峰', date: '16/09', type: '個別', progress: 'Ve/Vi', text: '能說出連謂謂語句-表達事件目的；能認讀1-3；能抄寫部份英文字母；能雙手手掌接著由5呎遠拋來的8吋膠球' },
-      { childName: '彭葆峰', date: '16/09', type: '入班', progress: 'Ve/Vi', text: '能與別人傾談有關過去或未來的事情；能於課堂或活動中安坐至少10分鐘；能與幼童共同分享玩具或工具，並作簡單交談' },
-
-      { childName: '黃懿祈', date: '04/11', type: '小組', progress: 'Vi/Ve', text: '能按老師指示完成課堂活動' },
-      { childName: '黃懿祈', date: '04/11', type: '入班', progress: 'Ve', text: '能按老師指示完成課堂活動' },
-      { childName: '黃懿祈', date: '27/11', type: '入班', progress: '待填', text: '能按老師指示完成課堂活動' },
-
-      { childName: '莫若燊', date: '04/11', type: '入班', progress: 'Vi', text: '能在提問下解釋引發情緒的起因' },
-      { childName: '莫若燊', date: '11/11', type: '入班', progress: '待填', text: '能在提問下解釋引發情緒的起因' },
-      { childName: '莫若燊', date: '27/11', type: '入班', progress: '待填', text: '能在提問下解釋引發情緒的起因' },
-
-      { childName: '鄺庭萱', date: '04/11', type: '小組', progress: 'Ve/Vi', text: '能與其他幼童共同分享玩具或工具，並能用說話作邀請或簡單交談' },
-      { childName: '鄺庭萱', date: '11/11', type: '入班', progress: '待填', text: '能與其他幼童共同分享玩具或工具，並能用說話作邀請或簡單交談' },
-      { childName: '鄺庭萱', date: '27/11', type: '入班', progress: '待填', text: '能與其他幼童共同分享玩具或工具，並能用說話作邀請或簡單交談' }
-    ];
-
+    // 移除固定 35 人底表，改為全動態跟隨 Google Drive《幼童班別名單》
+    const DEFAULT_CHILDREN_DATA = [];
+    const DEFAULT_FLOWCHART_LOGS = [];
     // 狀態管理
     let childrenData = [];
     let flowchartLogs = [];
@@ -1989,28 +1017,41 @@ function readDocText(file) {
     }
 
     // 根據流程表紀錄，計算單一學習目標的執行次數與課堂明細
+    function normalizeGoalForMatch(str) {
+      return String(str || '')
+        .replace(/\[[^\]]+\]/g, '')
+        .replace(/（[^）]*）|\([^)]*\)/g, '')
+        .replace(/^[\d一二三四五六七八九十]+[.)、．\s]*/, '')
+        .replace(/説/g, '說')
+        .replace(/着/g, '著')
+        .split(/，如|如：|如︰|例如|-->|→/)[0]
+        .replace(/[\s，。、：:；;「」『』"']/g, '')
+        .trim();
+    }
+
     function getGoalExecutionStats(childName, rawGoalItemText) {
       if (!childName || !rawGoalItemText) return { count: 0, matchedSessions: [] };
-      // 移除 [次範疇] 及 （提示方式） 及 標點例子，提取核心動詞關鍵字比對
-      const cleanGoal = rawGoalItemText
-        .replace(/\[[^\]]+\]/g, '')
-        .replace(/（[^）]+）|\([^)]+\)/g, '')
-        .split(/，如|如：|如︰|-->|→/)[0]
-        .trim();
-
+      const cleanGoal = normalizeGoalForMatch(rawGoalItemText);
       if (!cleanGoal || cleanGoal.length < 3) return { count: 0, matchedSessions: [] };
-      const keyPhrase = cleanGoal.slice(0, Math.min(cleanGoal.length, 10));
+      const keyPhrase = cleanGoal.slice(0, Math.min(cleanGoal.length, 8));
 
       const childSessions = flowchartLogs.filter(log => log.childName === childName);
-      const matchedSessions = childSessions.filter(log => {
-        if (!log.text) return false;
-        return log.text.includes(keyPhrase) || cleanGoal.includes(log.text.slice(0, 8));
+      const seenKeys = new Set();
+      const matchedSessions = [];
+
+      childSessions.forEach(log => {
+        if (!log.text) return;
+        const normLog = normalizeGoalForMatch(log.text);
+        if (normLog.includes(keyPhrase) || (normLog.length >= 5 && cleanGoal.includes(normLog.slice(0, 7)))) {
+          const sessionKey = `${log.date}_${log.type}_${log.sourceFile || ''}`;
+          if (!seenKeys.has(sessionKey)) {
+            seenKeys.add(sessionKey);
+            matchedSessions.push(log);
+          }
+        }
       });
 
-      return {
-        count: matchedSessions.length,
-        matchedSessions
-      };
+      return { count: matchedSessions.length, matchedSessions };
     }
 
     // 計算某位幼童在流程表中的總課堂節數及目標總執行人次
@@ -2179,12 +1220,19 @@ function readDocText(file) {
 
     // 渲染學校/組別分頁按鈕
     function renderGroupTabs() {
+      const baseOrder = ['方換 — 下年名單', '方換 — T1 名單', '慧妍', '蔡繼有'];
+      const dynamicGroups = Array.from(new Set(childrenData.map(c => c.group).filter(Boolean)));
+      const orderedNames = [
+        ...baseOrder.filter(g => dynamicGroups.includes(g)),
+        ...dynamicGroups.filter(g => !baseOrder.includes(g))
+      ];
       const groups = [
         { key: 'ALL', label: '全部幼童', count: childrenData.length },
-        { key: '方換 — 下年名單', label: '方換 — 下年名單', count: childrenData.filter(c => c.group === '方換 — 下年名單').length },
-        { key: '方換 — T1 名單', label: '方換 — T1 名單', count: childrenData.filter(c => c.group === '方換 — T1 名單').length },
-        { key: '慧妍', label: '慧妍', count: childrenData.filter(c => c.group === '慧妍').length },
-        { key: '蔡繼有', label: '蔡繼有', count: childrenData.filter(c => c.group === '蔡繼有').length }
+        ...orderedNames.map(g => ({
+          key: g,
+          label: g,
+          count: childrenData.filter(c => c.group === g).length
+        }))
       ];
 
       const container = document.getElementById('groupTabsContainer');
@@ -2283,7 +1331,7 @@ function readDocText(file) {
         // 性別圖示與配色
         const genderBadge = child.gender === '男'
           ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">👦 男</span>'
-          : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-50 text-pink-700 border border-pink-200">👧 女</span>';
+          : (child.gender === '女' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-50 text-pink-700 border border-pink-200">👧 女</span>' : '')
 
         // 特殊狀態標籤（插班生 / 退出）
         let statusTagHtml = '';
@@ -3039,12 +2087,12 @@ function readDocText(file) {
     function confirmResetToDefault() {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(FLOWCHART_LOGS_KEY);
-      childrenData = JSON.parse(JSON.stringify(DEFAULT_CHILDREN_DATA));
-      flowchartLogs = JSON.parse(JSON.stringify(DEFAULT_FLOWCHART_LOGS));
+      childrenData = [];
+      flowchartLogs = [];
       resetAllFilters();
       refreshAllUI();
       closeResetConfirmModal();
-      showToast('🔄 已重置為預設的 35 位幼童完整資料及流程表統計！');
+      syncFromGoogleDriveNow(false);
     }
 
     // ==================== 流程表學習目標次數統計功能 ====================
@@ -3146,13 +2194,21 @@ function readDocText(file) {
     }
 
     // ==================== GOOGLE DRIVE 即時雲端同步功能 ====================
-    function loadSyncSettings() {
+   function loadSyncSettings() {
+      const hasDefaultUrl = DEFAULT_GAS_URL && DEFAULT_GAS_URL.startsWith('https://script.google.com/');
       try {
         const raw = localStorage.getItem(GAS_SYNC_SETTINGS_KEY);
-        if (!raw) return { url: '', autoSync: false, lastSync: '' };
-        return JSON.parse(raw);
+        if (!raw) {
+          return { url: hasDefaultUrl ? DEFAULT_GAS_URL : '', autoSync: true, lastSync: '' };
+        }
+        const parsed = JSON.parse(raw);
+        return {
+          url: parsed.url || (hasDefaultUrl ? DEFAULT_GAS_URL : ''),
+          autoSync: parsed.autoSync !== undefined ? parsed.autoSync : true,
+          lastSync: parsed.lastSync || ''
+        };
       } catch (e) {
-        return { url: '', autoSync: false, lastSync: '' };
+        return { url: hasDefaultUrl ? DEFAULT_GAS_URL : '', autoSync: true, lastSync: '' };
       }
     }
 
@@ -3179,25 +2235,22 @@ function readDocText(file) {
         autoSync,
         lastSync: prev.lastSync || ''
       }));
-      if (showMsg) {
-        showToast('💾 已儲存雲端同步網址設定！');
-      }
+      if (showMsg) showToast('💾 已儲存雲端同步網址設定！');
     }
 
     function showSyncDiagnostic(message, isError = false) {
       const box = document.getElementById('syncDiagnosticBox');
       if (!box) return;
       box.classList.remove('hidden', 'bg-rose-50', 'text-rose-900', 'border-rose-300', 'bg-emerald-50', 'text-emerald-900', 'border-emerald-300');
-      if (isError) {
-        box.classList.add('bg-rose-50', 'text-rose-900', 'border-rose-300');
-      } else {
-        box.classList.add('bg-emerald-50', 'text-emerald-900', 'border-emerald-300');
-      }
+      box.classList.add(
+        isError ? 'bg-rose-50' : 'bg-emerald-50',
+        isError ? 'text-rose-900' : 'text-emerald-900',
+        isError ? 'border-rose-300' : 'border-emerald-300'
+      );
       box.innerHTML = message;
     }
 
-    // 跨網域 JSONP 載入工具（完全繞過瀏覽器 fetch CORS 限制）
-    function loadViaJsonpScript(srcUrl, callbackName, timeoutMs = 10000) {
+    function loadViaJsonpScript(srcUrl, callbackName, timeoutMs = 15000) {
       return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         let timer = setTimeout(() => {
@@ -3218,7 +2271,7 @@ function readDocText(file) {
 
         script.onerror = function() {
           cleanup();
-          reject(new Error('JSONP 無法載入，請確認連結權限已設為「知道連結的任何人可檢視」'));
+          reject(new Error('無法載入雲端連結'));
         };
 
         script.src = srcUrl;
@@ -3226,10 +2279,9 @@ function readDocText(file) {
       });
     }
 
-    // 將列陣資料轉換為幼童物件陣列
+    // 將《幼童統整總表》列資料轉為幼童物件（不預設空白性別為女，並兼容 + 或 / 分隔模式）
     function mapRowsToStudents(rows) {
       if (!Array.isArray(rows) || rows.length === 0) return [];
-      // 若第一行是標題列則跳過
       const firstCell = String(rows[0][0] || '');
       const secondCell = String(rows[0][1] || '');
       const dataRows = (firstCell.includes('編號') || secondCell.includes('姓名')) ? rows.slice(1) : rows;
@@ -3240,18 +2292,19 @@ function readDocText(file) {
         if (groupVal === '方換 — T1 名單') schoolFull = '保良局方王換娣幼稚園 (T1 第一層支援)';
         else if (groupVal === '慧妍') schoolFull = '保良局慧妍雅集幼稚園暨幼兒園 (OPRS)';
         else if (groupVal === '蔡繼有') schoolFull = '保良局蔡繼有幼稚園暨幼兒園 (OPRS)';
+        else schoolFull = groupVal;
 
         return {
           id: idx + 1,
           name: String(r[1] || '').trim(),
-          gender: String(r[2] || '女').trim(),
+          gender: String(r[2] || '').trim(),
           group: groupVal,
           schoolFullName: schoolFull,
           className: String(r[4] || '').trim(),
           teacher: String(r[5] || '').trim(),
           dob: String(r[6] || '').trim(),
           tier: String(r[8] || '').trim(),
-          mode: String(r[9] || '').trim(),
+          mode: String(r[9] || '').replace(/\s*\+\s*/g, '/').trim(),
           statusTag: String(r[10] || '').trim(),
           fileNo: String(r[11] || '').trim(),
           remarks: String(r[12] || '').trim(),
@@ -3269,285 +2322,210 @@ function readDocText(file) {
       });
     }
 
-    // 支援直接匯入從 Google Drive 下載的 CSV 檔案
+    // 將《流程表紀錄》分頁列資料轉為流程統計物件
+    function mapFlowRowsToLogs(flowRows) {
+      if (!Array.isArray(flowRows) || flowRows.length === 0) return [];
+      const dataRows = String(flowRows[0][0] || '').includes('姓名') ? flowRows.slice(1) : flowRows;
+      return dataRows
+        .filter(r => r && r[0] && r[3])
+        .map(r => ({
+          childName: String(r[0] || '').trim(),
+          date: String(r[1] || '本學期').trim(),
+          type: String(r[2] || '課堂').trim(),
+          text: String(r[3] || '').trim(),
+          progress: String(r[4] || '').trim(),
+          sourceFile: String(r[5] || '').trim()
+        }));
+    }
+
     function importFromCSVFile(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
-        const text = e.target.result;
-        const rows = parseCSVString(text);
+        const rows = parseCSVString(e.target.result);
         const students = mapRowsToStudents(rows);
         if (students.length > 0) {
           childrenData = students;
           saveDatabase();
           refreshAllUI();
-          const nowStr = new Date().toLocaleString('zh-HK', { hour12: false });
-          showSyncDiagnostic(`✅ 成功從 CSV 檔案匯入並更新 <strong>${students.length} 位幼童</strong> 的最新資料！（${nowStr}）`, false);
           showToast(`✅ 成功從 CSV 匯入 ${students.length} 位幼童資料！`);
-        } else {
-          showSyncDiagnostic('⚠️ 無法從此 CSV 讀取幼童名單，請確認格式與系統「📥 匯出 CSV」一致。', true);
         }
       };
       reader.readAsText(file, 'UTF-8');
     }
 
-    // 第 1 步輔助：一鍵複製全部 35 人資料為 Google Sheet (Tab 分隔) 格式，直接去 Google Sheet 按 Ctrl+V 即可
     function copyAllToGoogleSheetClipboard() {
       const headers = [
         '編號', '幼童姓名', '性別', '所屬組別', '班別', '負責老師',
-        '出生日期', '實齡(2026年11月)', '支援層級', '訓練模式', '狀態標籤',
+        '出生日期', '實齡', '支援層級', '訓練模式', '狀態標籤',
         '中心檔案編號', '排堂及特別備註', '特殊需要與能力概況',
         '語言目標', '社交/情緒目標', '認知目標', '小肌肉目標', '自理目標', '大肌肉目標', '綜合目標'
       ];
-
       const cleanCell = (val) => String(val ?? '').replace(/[\r\n\t]+/g, ' ').trim();
-
       const rows = childrenData.map((c, index) => {
         const ageInfo = calculateAgeText(c.dob);
         const g = c.goals || {};
         return [
-          index + 1,
-          c.name,
-          c.gender,
-          c.group,
-          c.className,
-          c.teacher,
-          c.dob || '',
-          ageInfo.hasDob ? ageInfo.ageBadge : '',
-          c.tier,
-          c.mode,
-          c.statusTag,
-          c.fileNo,
-          c.remarks,
-          c.specialNeeds || '',
-          g['語言'] || '',
-          g['社交情緒'] || '',
-          g['認知'] || '',
-          g['小肌肉'] || '',
-          g['自理'] || '',
-          g['大肌肉'] || '',
-          g['綜合目標'] || ''
+          index + 1, c.name, c.gender, c.group, c.className, c.teacher,
+          c.dob || '', ageInfo.hasDob ? ageInfo.ageBadge : '', c.tier, c.mode, c.statusTag,
+          c.fileNo, c.remarks, c.specialNeeds || '',
+          g['語言'] || '', g['社交情緒'] || '', g['認知'] || '', g['小肌肉'] || '', g['自理'] || '', g['大肌肉'] || '', g['綜合目標'] || ''
         ].map(cleanCell).join('\t');
       });
-
-      const tsvContent = [headers.join('\t'), ...rows].join('\n');
       const textarea = document.createElement('textarea');
-      textarea.value = tsvContent;
+      textarea.value = [headers.join('\t'), ...rows].join('\n');
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
       document.body.removeChild(textarea);
-
-      showSyncDiagnostic(
-        '✅ <strong>已複製全部 35 位幼童資料到剪貼簿！</strong><br/>' +
-        '現在請點擊「<strong>➕ 2. 打開新 Google Sheet</strong>」，在試算表左上角 <code>A1</code> 格按 <strong>Ctrl+V (或 Cmd+V)</strong> 貼上，再將試算表右上角「共用」設為「知道連結的任何人可檢視」，最後將網址貼回下方第 3 步即可！',
-        false
-      );
-      showToast('📋 已複製全表資料！請去 Google Sheet 按 Ctrl+V 貼上');
+      showToast(`📋 已複製目前 ${childrenData.length} 位幼童資料！`);
     }
 
-    // 方法二輔助：直接從 Google Sheet 複製貼上文字更新網頁
     function syncFromPastedSheetText() {
       const inputEl = document.getElementById('pasteSheetDataInput');
       const rawText = (inputEl && inputEl.value.trim()) || '';
-      if (!rawText) {
-        showSyncDiagnostic('⚠️ 請先在 Google Sheet 複製表格內容 (Ctrl+C)，然後貼入上方文字框內！', true);
-        return;
-      }
-
-      // 判斷係 Tab 分隔 (直接從 Google Sheet 複製) 定係 CSV 逗號分隔
-      let rows = [];
-      if (rawText.includes('\t')) {
-        rows = rawText.split(/\r?\n/).map(line => line.split('\t'));
-      } else {
-        rows = parseCSVString(rawText);
-      }
-
+      if (!rawText) return;
+      const rows = rawText.includes('\t') ? rawText.split(/\r?\n/).map(l => l.split('\t')) : parseCSVString(rawText);
       const students = mapRowsToStudents(rows);
       if (students.length > 0) {
         childrenData = students;
         saveDatabase();
         refreshAllUI();
         inputEl.value = '';
-        const nowStr = new Date().toLocaleString('zh-HK', { hour12: false });
-        showSyncDiagnostic(`✅ <strong>貼上同步成功！</strong>已即時更新 <strong>${students.length} 位幼童</strong> 的檔案資料（${nowStr}）。`, false);
-        showToast(`⚡ 已成功更新 ${students.length} 位幼童資料！`);
-      } else {
-        showSyncDiagnostic('⚠️ 無法識別貼上的表格格式，請確認複製時包含「編號、幼童姓名、性別、所屬組別...」等欄位。', true);
+        showToast(`⚡ 已更新 ${students.length} 位幼童資料！`);
       }
     }
 
-    // 下載包含目前最新資料與設定的獨立 .html 網頁工具檔案
     function downloadStandaloneHTML() {
-      let htmlSource = document.documentElement.outerHTML;
-      // 將目前最新的 childrenData 與 flowchartLogs 寫入預設變數中，確保下載後的 HTML 在任何裝置打開都有最新資料
-      const currentChildrenJson = JSON.stringify(childrenData, null, 2);
-      const currentLogsJson = JSON.stringify(flowchartLogs, null, 2);
-
-      htmlSource = htmlSource.replace(
-        /const DEFAULT_CHILDREN_DATA = \[[\s\S]*?\];\s*\/\/ 預載從 Google Drive/,
-        `const DEFAULT_CHILDREN_DATA = ${currentChildrenJson};\n\n    // 預載從 Google Drive`
-      );
-      htmlSource = htmlSource.replace(
-        /const DEFAULT_FLOWCHART_LOGS = \[[\s\S]*?\];\s*\/\/ 狀態管理/,
-        `const DEFAULT_FLOWCHART_LOGS = ${currentLogsJson};\n\n    // 狀態管理`
-      );
-
-      const fullHtml = '<!DOCTYPE html>\n<html lang="zh-HK">\n' + htmlSource.replace(/^<html[^>]*>/i, '');
+      const fullHtml = '<!DOCTYPE html>\n<html lang="zh-HK">\n' + document.documentElement.outerHTML.replace(/^<html[^>]*>/i, '');
       const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `傲翔計劃_幼童個別學習檔案系統_${new Date().toISOString().slice(0, 10)}.html`;
+      link.download = `index.html`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      showToast('⬇️ 已下載獨立網頁工具 (.html)！可放入 Google Drive 備份或喺電腦/iPad 直接打開。');
+      showToast('⬇️ 已下載 index.html！');
     }
 
-    // RFC4180 標準 CSV 解析器
     function parseCSVString(csvText) {
       const rows = [];
-      let currentRow = [];
-      let currentVal = '';
-      let inQuotes = false;
-
+      let currentRow = [], currentVal = '', inQuotes = false;
       for (let i = 0; i < csvText.length; i++) {
-        const ch = csvText[i];
-        const nextCh = csvText[i + 1];
+        const ch = csvText[i], nextCh = csvText[i + 1];
         if (inQuotes) {
-          if (ch === '"' && nextCh === '"') {
-            currentVal += '"';
-            i++;
-          } else if (ch === '"') {
-            inQuotes = false;
-          } else {
-            currentVal += ch;
-          }
+          if (ch === '"' && nextCh === '"') { currentVal += '"'; i++; }
+          else if (ch === '"') inQuotes = false;
+          else currentVal += ch;
         } else {
-          if (ch === '"') {
-            inQuotes = true;
-          } else if (ch === ',') {
-            currentRow.push(currentVal);
-            currentVal = '';
-          } else if (ch === '\n' || (ch === '\r' && nextCh === '\n')) {
+          if (ch === '"') inQuotes = true;
+          else if (ch === ',') { currentRow.push(currentVal); currentVal = ''; }
+          else if (ch === '\n' || (ch === '\r' && nextCh === '\n')) {
             if (ch === '\r') i++;
-            currentRow.push(currentVal);
-            rows.push(currentRow);
-            currentRow = [];
-            currentVal = '';
-          } else {
-            currentVal += ch;
-          }
+            currentRow.push(currentVal); rows.push(currentRow); currentRow = []; currentVal = '';
+          } else currentVal += ch;
         }
       }
-      if (currentVal !== '' || currentRow.length > 0) {
-        currentRow.push(currentVal);
-        rows.push(currentRow);
-      }
+      if (currentVal !== '' || currentRow.length > 0) { currentRow.push(currentVal); rows.push(currentRow); }
       return rows;
     }
 
-    async function syncFromGoogleDriveNow(silent = false) {
+    // 從雲端試算表或 Apps Script (/exec) 同步最新動態名單與流程表紀錄
+    async function syncFromGoogleDriveNow(silent = false, forceRescan = false) {
       const inputEl = document.getElementById('gasWebhookUrlInput');
       const settings = loadSyncSettings();
       const url = (inputEl && inputEl.value.trim()) || settings.url;
 
       if (!url) {
-        if (!silent) {
-          showSyncDiagnostic('⚠️ 請先在上方貼上「Google 試算表共用連結 (`docs.google.com/spreadsheets/d/...`)」或「Apps Script 網址」，或點擊右下角「📂 直接選擇 CSV 檔案匯入更新」。', true);
-        }
-        return;
-      }
-
-      // 檢查是否誤貼了 Google Drive 資料夾或 Word 檔案連結
-      if (url.includes('drive.google.com/drive/folders') || (url.includes('drive.google.com/file/') && !url.includes('spreadsheets'))) {
-        if (!silent) {
-          showSyncDiagnostic(
-            '💡 <strong>偵測到你貼上了 Google Drive 資料夾或非試算表連結：</strong><br/>' +
-            '由於瀏覽器安全限制，網頁無法直接讀取私人資料夾。請先按頂部「📥 匯出 CSV」上傳至 Google Drive 並<strong>「使用 Google 試算表開啟」</strong>，將共用權限設為「知道連結的任何人可檢視」，再貼上該份 <code>docs.google.com/spreadsheets/d/...</code> 網址即可即時連線！',
-            true
-          );
-        }
+        if (!silent) showSyncDiagnostic('⚠️ 請先貼上 Apps Script <code>/exec</code> 網址或 Google 試算表共用連結。', true);
         return;
       }
 
       const btn = document.getElementById('triggerSyncNowBtn');
       const headerLabel = document.getElementById('syncBtnLabel');
-      if (btn) btn.textContent = '⏳ 正在從雲端同步...';
-      if (headerLabel) headerLabel.textContent = '同步中...';
+      if (btn) btn.textContent = forceRescan ? '⏳ 正在重掃 Drive (約需1–2分鐘)...' : '⏳ 正在從雲端同步...';
+      if (headerLabel) headerLabel.textContent = forceRescan ? '重掃 Drive 中...' : '同步中...';
+      if (childrenData.length === 0) {
+        document.getElementById('filterResultCount').textContent = '⏳ 正在從 Google Drive 載入動態名單...';
+      }
 
       try {
         let syncedStudents = null;
         let syncedLogs = null;
 
-        // 模式一：若貼上的是 Google 試算表網址 (https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/...)
         const sheetIdMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
         if (sheetIdMatch && sheetIdMatch[1]) {
           const sheetId = sheetIdMatch[1];
-          const cbName = '__plkSheetCb_' + Date.now();
-          const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${cbName}`;
-          const gvizData = await loadViaJsonpScript(gvizUrl, cbName, 10000);
-
-          if (gvizData && gvizData.table && Array.isArray(gvizData.table.rows)) {
-            const rawRows = gvizData.table.rows.map(r =>
-              (r.c || []).map(cell => (cell ? (cell.f !== undefined && cell.f !== null ? cell.f : (cell.v ?? '')) : ''))
-            );
+          // 讀取第 1 分頁：幼童統整總表
+          const cb1 = '__plkSheetMain_' + Date.now();
+          const gvizMain = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${cb1}&sheet=${encodeURIComponent('幼童統整總表')}`;
+          const mainData = await loadViaJsonpScript(gvizMain, cb1, 15000);
+          if (mainData && mainData.table && Array.isArray(mainData.table.rows)) {
+            const rawRows = mainData.table.rows.map(r => (r.c || []).map(cell => (cell ? (cell.f ?? cell.v ?? '') : '')));
             syncedStudents = mapRowsToStudents(rawRows);
           }
+          // 讀取第 2 分頁：流程表紀錄
+          try {
+            const cb2 = '__plkSheetFlow_' + Date.now();
+            const gvizFlow = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${cb2}&sheet=${encodeURIComponent('流程表紀錄')}`;
+            const flowData = await loadViaJsonpScript(gvizFlow, cb2, 15000);
+            if (flowData && flowData.table && Array.isArray(flowData.table.rows)) {
+              const rawFlow = flowData.table.rows.map(r => (r.c || []).map(cell => (cell ? (cell.f ?? cell.v ?? '') : '')));
+              syncedLogs = mapFlowRowsToLogs(rawFlow);
+            }
+          } catch (e) {}
         } else {
-          // 模式二：貼上的是 Google Apps Script 網址 (優先使用 JSONP 繞過 CORS，完全避免 Failed to fetch)
+          // 讀取 Apps Script Web App (/exec)，支援 data.rows 及 data.flowLogs
           const cbName = '__plkGasCb_' + Date.now();
           const sep = url.includes('?') ? '&' : '?';
-          const jsonpUrl = `${url}${sep}callback=${cbName}`;
-          const data = await loadViaJsonpScript(jsonpUrl, cbName, 10000);
-          if (data && Array.isArray(data.students)) {
-            syncedStudents = data.students;
-            if (Array.isArray(data.flowchartLogs)) {
-              syncedLogs = data.flowchartLogs;
-            }
+          const actionParam = forceRescan ? 'action=rescan&' : '';
+          const jsonpUrl = `${url}${sep}${actionParam}callback=${cbName}`;
+          const timeout = forceRescan ? 180000 : 20000;
+          const data = await loadViaJsonpScript(jsonpUrl, cbName, timeout);
+
+          if (data) {
+            if (Array.isArray(data.rows)) syncedStudents = mapRowsToStudents(data.rows);
+            else if (Array.isArray(data.students)) syncedStudents = data.students;
+
+            if (Array.isArray(data.flowLogs)) syncedLogs = mapFlowRowsToLogs(data.flowLogs);
+            else if (Array.isArray(data.flowchartLogs)) syncedLogs = data.flowchartLogs;
           }
         }
 
-        if (syncedStudents && syncedStudents.length > 0) {
+        if (Array.isArray(syncedStudents)) {
           childrenData = syncedStudents;
-          if (syncedLogs && syncedLogs.length > 0) {
-            flowchartLogs = syncedLogs;
-          }
+          if (Array.isArray(syncedLogs)) flowchartLogs = syncedLogs;
           saveDatabase();
           const nowStr = new Date().toLocaleString('zh-HK', { hour12: false });
           localStorage.setItem(GAS_SYNC_SETTINGS_KEY, JSON.stringify({
             url,
-            autoSync: document.getElementById('autoSyncOnLoadCheckbox')?.checked ?? settings.autoSync,
+            autoSync: document.getElementById('autoSyncOnLoadCheckbox')?.checked ?? true,
             lastSync: nowStr
           }));
           const badge = document.getElementById('lastSyncTimeBadge');
           if (badge) badge.textContent = `上次同步：${nowStr}`;
           refreshAllUI();
-          showSyncDiagnostic(`✅ <strong>雲端同步成功！</strong>已即時更新 <strong>${syncedStudents.length} 位幼童</strong> 的最新檔案資料（${nowStr}）。`, false);
-          if (!silent) showToast(`☁️ 成功從雲端同步 ${syncedStudents.length} 位幼童資料！`);
-        } else {
-          if (!silent) {
-            showSyncDiagnostic('⚠️ 已連上雲端，但讀取不到幼童資料列。請確認試算表第一個分頁的欄位順序與系統「📥 匯出 CSV」一致。', true);
-          }
+          showSyncDiagnostic(`✅ <strong>雲端同步成功！</strong>已載入 <strong>${childrenData.length} 位幼童</strong> 及 <strong>${flowchartLogs.length} 節流程紀錄</strong>（${nowStr}）。`, false);
+          if (!silent) showToast(`☁️ 已同步 ${childrenData.length} 位幼童及 ${flowchartLogs.length} 節流程紀錄！`);
         }
       } catch (err) {
-        // 避免使用 console.error 觸發預覽環境錯誤攔截，改為顯示清晰的逐步排錯提示
         if (!silent) {
-          showSyncDiagnostic(
-            '⚠️ <strong>無法讀取該雲端連結，請檢查以下兩點：</strong><br/>' +
-            '1. 若你貼上的是 <strong>Google 試算表網址</strong>：請點擊試算表右上角「共用」，確認已設為<strong>「知道連結的任何人 ➔ 檢視者」</strong>。<br/>' +
-            '2. 若你貼上的是 <strong>Apps Script 網址</strong>：請確認結尾為 <code>/exec</code>（而非 <code>/dev</code>），且已貼上本視窗下方支援 JSONP 的新版程式碼並將存取權設為「所有人 (Anyone)」。',
-            true
-          );
-          showToast('⚠️ 雲端連線被拒，請查看視窗內的權限設定提示', true);
+          showSyncDiagnostic('⚠️ 無法連線，請確認 Apps Script 已部署為「所有人 (Anyone)」且網址結尾為 <code>/exec</code>。', true);
+          showToast('⚠️ 雲端同步失敗，請檢查部署權限', true);
         }
       } finally {
-        if (btn) btn.textContent = '🔄 立即從雲端同步';
+        if (btn) btn.textContent = '🔄 3. 立即從雲端同步';
         if (headerLabel) headerLabel.textContent = 'Google Drive 即時同步';
       }
+    }
+
+    // 供頂部按鈕直接觸發 Google Drive 重新掃描零散檔案
+    function triggerDriveRescan() {
+      showToast('⚡ 正在通知 Google Drive 重新掃描名單與流程表，約需 1–2 分鐘...');
+      syncFromGoogleDriveNow(false, true);
     }
 
     function copyGasScriptCode() {
