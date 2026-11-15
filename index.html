@@ -1329,9 +1329,11 @@ function readDocText(file) {
         const ageInfo = calculateAgeText(child.dob);
 
         // 性別圖示與配色
-        const genderBadge = child.gender === '男'
+       const genderBadge = child.gender === '男'
           ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">👦 男</span>'
-          : (child.gender === '女' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-50 text-pink-700 border border-pink-200">👧 女</span>' : '')
+          : (child.gender === '女'
+              ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-50 text-pink-700 border border-pink-200">👧 女</span>'
+              : '');
 
         // 特殊狀態標籤（插班生 / 退出）
         let statusTagHtml = '';
@@ -1614,9 +1616,11 @@ function readDocText(file) {
               </div>
               <div class="flex items-center gap-3 pt-1">
                 <h2 class="text-2xl sm:text-3xl font-bold text-warm-800">${child.name}</h2>
-                <span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold ${child.gender === '男' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-pink-50 text-pink-700 border border-pink-200'}">
-                  ${child.gender === '男' ? '👦 男童' : '👧 女童'}
-                </span>
+                ${child.gender === '男'
+                  ? '<span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-blue-50 text-blue-700 border border-blue-200">👦 男童</span>'
+                  : (child.gender === '女'
+                      ? '<span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-pink-50 text-pink-700 border border-pink-200">👧 女童</span>'
+                      : '')}
               </div>
               <p class="text-xs text-warm-500">${child.schoolFullName || child.group}</p>
             </div>
