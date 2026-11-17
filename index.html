@@ -97,131 +97,119 @@
 </head>
 <body class="min-h-screen flex flex-col selection:bg-amber-200 selection:text-warm-800">
 
-  <!-- ================= HEADER & STATS BAR ================= -->
-  <header class="sticky top-0 z-30 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-cream-200 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        
-        <!-- Title & Subtitle -->
-        <div class="flex items-start sm:items-center gap-3">
-          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-xl shadow-sm shrink-0">
-            傲
-          </div>
-          <div>
-            <div class="flex flex-wrap items-center gap-2">
-              <h1 class="text-lg sm:text-xl font-bold text-warm-800 tracking-tight">
-                傲翔計劃 — 幼童個別學習檔案及名單統整系統
-              </h1>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-200">
-                2026/27 學年 (9月–2月 IEP)
-              </span>
-            </div>
-            <p class="text-xs sm:text-sm text-warm-600 mt-0.5">
-              點擊任何幼童名牌即可彈出完整個別檔案、特殊需要概況及今期學習目標（支援即時編輯與匯出）
-            </p>
-          </div>
+  <!-- ================= HEADER ================= -->
+  <header class="sticky top-0 z-30 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-stone-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-3">
+      <!-- 標題 -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-lg bg-stone-800 flex items-center justify-center text-amber-50 font-bold text-sm shrink-0">
+          傲
         </div>
-
-        <!-- Action Toolbar -->
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="openSmartExtractorModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white shadow-sm transition cursor-pointer ring-2 ring-amber-200" title="一次過拖入多個零散 Word (ITP/流程表) 或 Excel (學童資料) 檔案，自動以幼童姓名配對並抓取資料">
-            <span>🪄</span>
-            <span>零散檔案智能抓取</span>
-          </button>
-          <button onclick="openDriveSyncModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white shadow-sm transition cursor-pointer" title="一鍵將資料同步至 Google Drive 試算表或下載獨立網頁工具">
-            <span>☁️</span>
-            <span id="syncBtnLabel">同步至 Google Drive 教學及工具</span>
-          </button>
-          <button onclick="downloadStandaloneHTML()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white shadow-sm transition cursor-pointer" title="下載包含最新資料的獨立網頁檔 (.html)，可存入 Google Drive、電腦或 iPad 隨時打開">
-            <span>⬇️</span>
-            <span>下載網頁工具 (.html)</span>
-          </button>
-          <button onclick="openFlowchartParserModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white shadow-sm transition cursor-pointer" title="自動根據訓練流程表統計各學習目標的執行次數">
-            <span>📊</span>
-            <span>流程表目標次數統計</span>
-          </button>
-          <button onclick="openAddChildModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white shadow-sm transition cursor-pointer">
-            <span>➕</span>
-            <span>新增幼童</span>
-          </button>
-          <button onclick="exportToCSV()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-sm transition cursor-pointer" title="匯出 UTF-8 CSV 檔案，可直接導入 Google Sheets 或 Excel">
-            <span>📥</span>
-            <span>匯出 CSV</span>
-          </button>
-          <button onclick="openBackupModal()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white hover:bg-cream-100 text-warm-700 border border-cream-300 shadow-sm transition cursor-pointer">
-            <span>💾</span>
-            <span>備份</span>
-          </button>
-          <button onclick="openResetConfirmModal()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 shadow-sm transition cursor-pointer">
-            <span>🔄</span>
-            <span>重置</span>
-          </button>
-          <button onclick="triggerDriveRescan()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-sky-600 hover:bg-sky-700 text-white shadow-sm transition cursor-pointer" title="通知 Google Drive 重新掃描最新幼童名單、ITP 及流程表">
-            <span>⚡</span>
-            <span>重掃 Drive 檔案</span>
-          </button>
+        <div class="truncate">
+          <h1 class="text-base sm:text-lg font-bold text-stone-800 truncate">
+            傲翔計劃 — 幼童學習檔案
+          </h1>
         </div>
+      </div>
 
+      <!-- 精簡操作列：同步 + 重掃 + 工具選單 -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="syncFromGoogleDriveNow(false)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-stone-800 hover:bg-stone-700 text-white transition cursor-pointer">
+          <span>🔄</span>
+          <span id="syncBtnLabel">同步</span>
+        </button>
+
+        <button onclick="if(typeof triggerDriveRescan==='function'){triggerDriveRescan();}else{syncFromGoogleDriveNow(false,true);}" class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 transition cursor-pointer" title="通知 Google Drive 重新掃描最新名單、ITP 及流程表">
+          <span>⚡</span>
+          <span>重掃 Drive</span>
+        </button>
+
+        <details id="adminMenuDropdown" class="relative">
+          <summary class="list-none inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 transition cursor-pointer select-none">
+            <span>⚙️</span>
+            <span>選單</span>
+          </summary>
+          <div class="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-50 text-xs sm:text-sm text-stone-700">
+            <button onclick="this.closest('details').removeAttribute('open'); openFlowchartParserModal();" class="w-full text-left px-4 py-2 hover:bg-stone-50 flex items-center gap-2 cursor-pointer">
+              <span>📊</span><span>流程表目標次數統計</span>
+            </button>
+            <button onclick="this.closest('details').removeAttribute('open'); openAddChildModal();" class="w-full text-left px-4 py-2 hover:bg-stone-50 flex items-center gap-2 cursor-pointer">
+              <span>➕</span><span>新增幼童</span>
+            </button>
+            <button onclick="this.closest('details').removeAttribute('open'); if(typeof triggerDriveRescan==='function'){triggerDriveRescan();}" class="sm:hidden w-full text-left px-4 py-2 hover:bg-stone-50 flex items-center gap-2 cursor-pointer">
+              <span>⚡</span><span>重掃 Drive 檔案</span>
+            </button>
+            <button onclick="this.closest('details').removeAttribute('open'); openDriveSyncModal();" class="w-full text-left px-4 py-2 hover:bg-stone-50 flex items-center gap-2 cursor-pointer">
+              <span>☁️</span><span>雲端連線設定</span>
+            </button>
+            <button onclick="this.closest('details').removeAttribute('open'); openSmartExtractorModal();" class="w-full text-left px-4 py-2 hover:bg-stone-50 flex items-center gap-2 cursor-pointer">
+              <span>🪄</span><span>零散檔案抓取</span>
+            </button>
+            <div class="my-1 border-t border-stone-100"></div>
+            <button onclick="this.closest('details').removeAttribute('open'); exportToCSV();" class="w-full text-left px-4 py-2 hover:bg-stone-50 flex items-center gap-2 cursor-pointer">
+              <span>📥</span><span>匯出 CSV</span>
+            </button>
+            <button onclick="this.closest('details').removeAttribute('open'); downloadStandaloneHTML();" class="w-full text-left px-4 py-2 hover:bg-stone-50 flex items-center gap-2 cursor-pointer">
+              <span>⬇️</span><span>下載網頁 (.html)</span>
+            </button>
+            <button onclick="this.closest('details').removeAttribute('open'); openBackupModal();" class="w-full text-left px-4 py-2 hover:bg-stone-50 flex items-center gap-2 cursor-pointer">
+              <span>💾</span><span>備份與還原</span>
+            </button>
+            <button onclick="this.closest('details').removeAttribute('open'); openResetConfirmModal();" class="w-full text-left px-4 py-2 hover:bg-rose-50 text-rose-700 flex items-center gap-2 cursor-pointer">
+              <span>🔄</span><span>清除快取並重載</span>
+            </button>
+          </div>
+        </details>
       </div>
     </div>
   </header>
 
   <!-- ================= MAIN CONTENT CONTAINER ================= -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
+    <!-- 保留隱藏節點以相容舊函式 -->
+    <div id="statsBar" class="hidden"></div>
 
-    <!-- 1. Quick Summary Metrics Bar -->
-    <section id="statsBar" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-      <!-- Dynamically populated by JS -->
-    </section>
-
-    <!-- 2. Multi-dimensional Filter & Search Panel -->
-    <section class="bg-white rounded-2xl border border-cream-200 p-4 sm:p-5 shadow-sm space-y-4">
-      
-      <!-- School / Group Tabs -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-cream-200 pb-3.5">
-        <div class="flex items-center gap-1.5 text-xs font-semibold text-warm-600 uppercase tracking-wider">
-          <span>🏫</span>
-          <span>學校及組別分頁：</span>
-        </div>
-        <div id="groupTabsContainer" class="flex flex-wrap gap-2">
+    <!-- 濃縮版組別分頁與單行搜尋列 -->
+    <section class="bg-white rounded-2xl border border-stone-200 p-3.5 shadow-sm space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div id="groupTabsContainer" class="flex flex-wrap items-center gap-1.5">
           <!-- Populated by JS -->
+        </div>
+        <div class="flex items-center gap-2.5 ml-auto">
+          <span id="filterResultCount" class="text-xs font-medium text-stone-500">載入中...</span>
+          <button id="resetFiltersBtn" onclick="resetAllFilters()" class="hidden text-xs font-semibold text-amber-700 hover:text-amber-900 underline cursor-pointer">
+            清除篩選
+          </button>
         </div>
       </div>
 
-      <!-- Search Input & Dropdown / Pill Filters -->
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-        
-        <!-- Instant Search Input -->
-        <div class="md:col-span-6 relative">
-          <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-warm-500 pointer-events-none">
-            🔍
-          </span>
+      <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+        <div class="sm:col-span-6 relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400 pointer-events-none text-xs">🔍</span>
           <input
             id="searchInput"
             type="text"
             oninput="handleSearchInput(this.value)"
-            placeholder="搜尋姓名、班別(如:上低A)、老師、特殊需要或目標關鍵字(如:連接詞、筷子)..."
-            class="w-full pl-10 pr-9 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-sm text-warm-800 placeholder-warm-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+            placeholder="搜尋姓名、班別、老師或目標關鍵字..."
+            class="w-full pl-8 pr-8 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-400 focus:bg-white transition"
           />
           <button
             id="clearSearchBtn"
             onclick="clearSearch()"
-            class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-warm-500 hover:text-warm-800 text-sm font-bold"
+            class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-stone-700 text-xs font-bold cursor-pointer"
             title="清除搜尋"
           >
             ✕
           </button>
         </div>
 
-            <!--Support Tier Filter -->
-        <div class="md:col-span-3 flex items-center gap-2">
-          <label for="tierSelect" class="text-xs font-semibold text-warm-600 shrink-0">支援層級：</label>
+        <div class="sm:col-span-3">
           <select
             id="tierSelect"
             onchange="handleTierFilter(this.value)"
-            class="w-full py-2.5 px-3 bg-cream-50 border border-cream-300 rounded-xl text-sm text-warm-800 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+            class="w-full py-2 px-3 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm text-stone-700 font-medium focus:outline-none focus:ring-2 focus:ring-stone-400 cursor-pointer"
           >
-            <option value="ALL">全部層級</option>
+            <option value="ALL">支援層級：全部</option>
             <option value="A">A 層級 (密集支援)</option>
             <option value="B">B 層級 (中度支援)</option>
             <option value="T1">T1 第一層支援</option>
@@ -230,70 +218,34 @@
           </select>
         </div>
 
-        <!-- Training Mode Filter -->
-        <div class="md:col-span-3 flex items-center gap-2">
-          <label for="modeSelect" class="text-xs font-semibold text-warm-600 shrink-0">訓練模式：</label>
+        <div class="sm:col-span-3">
           <select
             id="modeSelect"
             onchange="handleModeFilter(this.value)"
-            class="w-full py-2.5 px-3 bg-cream-50 border border-cream-300 rounded-xl text-sm text-warm-800 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+            class="w-full py-2 px-3 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm text-stone-700 font-medium focus:outline-none focus:ring-2 focus:ring-stone-400 cursor-pointer"
           >
-            <option value="ALL">全部模式</option>
+            <option value="ALL">訓練模式：全部</option>
             <option value="入班">包含「入班」</option>
             <option value="個別">包含「個別」</option>
             <option value="小組">包含「小組」</option>
           </select>
         </div>
-
       </div>
-
-      <!-- Quick Keyword Filter Chips & Active Filter Status -->
-      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-        <div class="flex flex-wrap items-center gap-1.5">
-          <span class="text-xs font-medium text-warm-600 mr-1">⚡ 常用目標快速篩選：</span>
-          <button onclick="quickSearch('連接詞')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-cream-100 hover:bg-amber-100 text-warm-700 hover:text-amber-900 transition cursor-pointer">#連接詞</button>
-          <button onclick="quickSearch('筷子')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-cream-100 hover:bg-amber-100 text-warm-700 hover:text-amber-900 transition cursor-pointer">#筷子</button>
-          <button onclick="quickSearch('牙膠棒')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-cream-100 hover:bg-amber-100 text-warm-700 hover:text-amber-900 transition cursor-pointer">#口肌/牙膠棒</button>
-          <button onclick="quickSearch('輪序對話')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-cream-100 hover:bg-amber-100 text-warm-700 hover:text-amber-900 transition cursor-pointer">#輪序對話</button>
-          <button onclick="quickSearch('情緒')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-cream-100 hover:bg-amber-100 text-warm-700 hover:text-amber-900 transition cursor-pointer">#情緒調適</button>
-          <button onclick="quickSearch('中文字')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-cream-100 hover:bg-amber-100 text-warm-700 hover:text-amber-900 transition cursor-pointer">#寫中文字</button>
-          <button onclick="quickSearch('周侍箴')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-cream-100 hover:bg-amber-100 text-warm-700 hover:text-amber-900 transition cursor-pointer">#周侍箴老師</button>
-          <button onclick="quickSearch('李詠祺')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-cream-100 hover:bg-amber-100 text-warm-700 hover:text-amber-900 transition cursor-pointer">#李詠祺老師</button>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <span id="filterResultCount" class="text-xs sm:text-sm font-semibold text-warm-700">
-            顯示 35 / 35 位幼童
-          </span>
-          <button
-            id="resetFiltersBtn"
-            onclick="resetAllFilters()"
-            class="hidden text-xs font-semibold text-amber-700 hover:text-amber-900 underline cursor-pointer"
-          >
-            清除所有篩選條件
-          </button>
-        </div>
-      </div>
-
     </section>
 
-    <!-- 3. Child Nameplate Card Grid -->
+    <!-- 極簡幼童名牌網格 -->
     <section>
-      <div id="cardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div id="cardsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         <!-- Dynamically populated by JS -->
       </div>
 
-      <!-- Empty State -->
-      <div id="emptyState" class="hidden bg-white rounded-2xl border border-cream-200 p-12 text-center my-4">
-        <div class="text-4xl mb-3">🔍</div>
-        <h3 class="text-base font-bold text-warm-800">找不到符合篩選條件的幼童資料</h3>
-        <p class="text-sm text-warm-600 mt-1">請嘗試調整搜尋關鍵字、切換學校分頁或重設支援層級篩選。</p>
-        <button onclick="resetAllFilters()" class="mt-4 px-4 py-2 rounded-xl bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 transition cursor-pointer">
-          顯示全部 35 位幼童
+      <div id="emptyState" class="hidden bg-white rounded-2xl border border-stone-200 p-10 text-center my-4">
+        <h3 class="text-sm sm:text-base font-bold text-stone-700">找不到符合篩選條件的幼童</h3>
+        <button onclick="resetAllFilters()" class="mt-3 px-4 py-1.5 rounded-xl bg-stone-800 text-white text-xs sm:text-sm font-semibold hover:bg-stone-700 transition cursor-pointer">
+          顯示全部幼童
         </button>
       </div>
     </section>
-
   </main>
 
   <!-- ================= FOOTER ================= -->
@@ -1102,123 +1054,33 @@ function readDocText(file) {
       };
     }
 
-    // 組別配色樣式
+    // 組別柔和配色樣式
     function getGroupStyle(groupName) {
-      switch (groupName) {
-        case '方換 — 下年名單':
-          return {
-            badge: 'bg-amber-100/90 text-amber-900 border-amber-300',
-            topBar: 'bg-amber-400',
-            dot: 'bg-amber-500'
-          };
-        case '方換 — T1 名單':
-          return {
-            badge: 'bg-sky-100/90 text-sky-900 border-sky-300',
-            topBar: 'bg-sky-400',
-            dot: 'bg-sky-500'
-          };
-        case '慧妍':
-          return {
-            badge: 'bg-rose-100/90 text-rose-900 border-rose-300',
-            topBar: 'bg-rose-400',
-            dot: 'bg-rose-500'
-          };
-        case '蔡繼有':
-          return {
-            badge: 'bg-emerald-100/90 text-emerald-900 border-emerald-300',
-            topBar: 'bg-emerald-500',
-            dot: 'bg-emerald-500'
-          };
-        default:
-          return {
-            badge: 'bg-stone-100 text-stone-800 border-stone-300',
-            topBar: 'bg-stone-400',
-            dot: 'bg-stone-500'
-          };
-      }
+      return {
+        badge: 'bg-stone-100 text-stone-700 border-stone-200',
+        topBar: 'bg-stone-300',
+        dot: 'bg-stone-400'
+      };
     }
 
-    // 支援層級標籤樣式
+    // 支援層級標籤樣式（僅保留層級重點色）
     function getTierStyle(tier) {
       switch (tier) {
         case 'A':
-          return 'bg-orange-600 text-white border-orange-700';
+          return 'bg-amber-100 text-amber-900 border-amber-300';
         case 'B':
-          return 'bg-teal-600 text-white border-teal-700';
+          return 'bg-teal-50 text-teal-800 border-teal-200';
         case 'T1':
-          return 'bg-sky-600 text-white border-sky-700';
+          return 'bg-sky-50 text-sky-800 border-sky-200';
         default:
-          return 'bg-stone-200 text-stone-700 border-stone-300';
+          return 'bg-stone-100 text-stone-600 border-stone-200';
       }
     }
 
-    // 渲染頂部統計小卡
-    function renderStatsBar() {
-      const total = childrenData.length;
-      const countSBM = childrenData.filter(c => c.group === '方換 — 下年名單').length;
-      const countT1 = childrenData.filter(c => c.group === '方換 — T1 名單').length;
-      const countWaiYin = childrenData.filter(c => c.group === '慧妍').length;
-      const countCKY = childrenData.filter(c => c.group === '蔡繼有').length;
-      const countTierA = childrenData.filter(c => c.tier === 'A').length;
-      const countTierB = childrenData.filter(c => c.tier === 'B').length;
+    // 統計卡已整合至組別分頁，保留空函式以相容呼叫
+    function renderStatsBar() {}
 
-      const statsBar = document.getElementById('statsBar');
-      statsBar.innerHTML = `
-        <div onclick="handleGroupTab('ALL')" class="bg-white rounded-2xl border border-cream-200 p-3.5 shadow-sm flex items-center justify-between cursor-pointer hover:border-amber-400 transition">
-          <div>
-            <div class="text-xs font-medium text-warm-600">總幼童人數</div>
-            <div class="text-2xl font-bold text-warm-800 mt-0.5">${total} <span class="text-xs font-normal text-warm-500">人</span></div>
-          </div>
-          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-lg font-bold">👶</div>
-        </div>
-
-        <div onclick="handleGroupTab('方換 — 下年名單')" class="bg-white rounded-2xl border border-cream-200 p-3.5 shadow-sm flex items-center justify-between cursor-pointer hover:border-amber-400 transition">
-          <div>
-            <div class="text-xs font-medium text-warm-600">方換 — 下年名單</div>
-            <div class="text-2xl font-bold text-amber-800 mt-0.5">${countSBM} <span class="text-xs font-normal text-warm-500">人</span></div>
-          </div>
-          <div class="w-10 h-10 rounded-xl bg-amber-100/70 text-amber-800 flex items-center justify-center text-xs font-bold">SBM</div>
-        </div>
-
-        <div onclick="handleGroupTab('方換 — T1 名單')" class="bg-white rounded-2xl border border-cream-200 p-3.5 shadow-sm flex items-center justify-between cursor-pointer hover:border-sky-400 transition">
-          <div>
-            <div class="text-xs font-medium text-warm-600">方換 — T1 名單</div>
-            <div class="text-2xl font-bold text-sky-800 mt-0.5">${countT1} <span class="text-xs font-normal text-warm-500">人</span></div>
-          </div>
-          <div class="w-10 h-10 rounded-xl bg-sky-100/70 text-sky-800 flex items-center justify-center text-xs font-bold">T1</div>
-        </div>
-
-        <div onclick="handleGroupTab('慧妍')" class="bg-white rounded-2xl border border-cream-200 p-3.5 shadow-sm flex items-center justify-between cursor-pointer hover:border-rose-400 transition">
-          <div>
-            <div class="text-xs font-medium text-warm-600">慧妍雅集 (OPRS)</div>
-            <div class="text-2xl font-bold text-rose-800 mt-0.5">${countWaiYin} <span class="text-xs font-normal text-warm-500">人</span></div>
-          </div>
-          <div class="w-10 h-10 rounded-xl bg-rose-100/70 text-rose-800 flex items-center justify-center text-xs font-bold">慧妍</div>
-        </div>
-
-        <div onclick="handleGroupTab('蔡繼有')" class="bg-white rounded-2xl border border-cream-200 p-3.5 shadow-sm flex items-center justify-between cursor-pointer hover:border-emerald-400 transition">
-          <div>
-            <div class="text-xs font-medium text-warm-600">蔡繼有 (OPRS)</div>
-            <div class="text-2xl font-bold text-emerald-800 mt-0.5">${countCKY} <span class="text-xs font-normal text-warm-500">人</span></div>
-          </div>
-          <div class="w-10 h-10 rounded-xl bg-emerald-100/70 text-emerald-800 flex items-center justify-center text-xs font-bold">蔡繼有</div>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-cream-200 p-3.5 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs font-medium text-warm-600">A / B 層級分佈</div>
-            <div class="text-lg font-bold text-warm-800 mt-1">
-              <span class="text-orange-700">A:${countTierA}</span>
-              <span class="text-warm-400 mx-1">/</span>
-              <span class="text-teal-700">B:${countTierB}</span>
-            </div>
-          </div>
-          <div class="w-10 h-10 rounded-xl bg-cream-100 text-warm-700 flex items-center justify-center text-base font-bold">📊</div>
-        </div>
-      `;
-    }
-
-    // 渲染學校/組別分頁按鈕
+    // 動態渲染學校/組別分頁按鈕
     function renderGroupTabs() {
       const baseOrder = ['方換 — 下年名單', '方換 — T1 名單', '慧妍', '蔡繼有'];
       const dynamicGroups = Array.from(new Set(childrenData.map(c => c.group).filter(Boolean)));
@@ -1227,31 +1089,30 @@ function readDocText(file) {
         ...dynamicGroups.filter(g => !baseOrder.includes(g))
       ];
       const groups = [
-        { key: 'ALL', label: '全部幼童', count: childrenData.length },
+        { key: 'ALL', label: '全部', count: childrenData.length },
         ...orderedNames.map(g => ({
           key: g,
-          label: g,
+          label: g.replace('方換 — ', ''),
           count: childrenData.filter(c => c.group === g).length
         }))
       ];
 
       const container = document.getElementById('groupTabsContainer');
+      if (!container) return;
       container.innerHTML = groups.map(g => {
         const active = currentFilter.group === g.key;
         const btnClass = active
-          ? 'bg-warm-800 text-white border-warm-800 shadow-sm'
-          : 'bg-cream-50 hover:bg-cream-100 text-warm-700 border-cream-300';
-        const badgeClass = active
-          ? 'bg-amber-400 text-warm-900'
-          : 'bg-cream-200 text-warm-700';
+          ? 'bg-stone-800 text-white border-stone-800'
+          : 'bg-stone-50 hover:bg-stone-100 text-stone-700 border-stone-200';
+        const countClass = active ? 'text-stone-300' : 'text-stone-400';
 
         return `
           <button
             onclick="handleGroupTab('${g.key}')"
-            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition cursor-pointer ${btnClass}"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold border transition cursor-pointer ${btnClass}"
           >
             <span>${g.label}</span>
-            <span class="px-2 py-0.5 rounded-full text-xs font-bold ${badgeClass}">${g.count}</span>
+            <span class="text-xs font-medium ${countClass}">${g.count}</span>
           </button>
         `;
       }).join('');
@@ -1262,48 +1123,30 @@ function readDocText(file) {
       const q = currentFilter.search.trim().toLowerCase();
 
       filteredList = childrenData.filter(child => {
-        // 1. Group filter
-        if (currentFilter.group !== 'ALL' && child.group !== currentFilter.group) {
-          return false;
-        }
-        // 2. Tier filter
+        if (currentFilter.group !== 'ALL' && child.group !== currentFilter.group) return false;
         if (currentFilter.tier !== 'ALL') {
           if (currentFilter.tier === '已退出') {
             if (child.statusTag !== '退出') return false;
-          } else {
-            if (child.tier !== currentFilter.tier) return false;
+          } else if (child.tier !== currentFilter.tier) {
+            return false;
           }
         }
-        // 3. Training Mode filter
         if (currentFilter.mode !== 'ALL') {
           if (!child.mode || !child.mode.includes(currentFilter.mode)) return false;
         }
-        // 4. Search Keyword filter
         if (q) {
           const goalsText = Object.values(child.goals || {}).join(' ');
           const searchable = [
-            child.name,
-            child.group,
-            child.schoolFullName,
-            child.className,
-            child.teacher,
-            child.fileNo,
-            child.dob,
-            child.tier,
-            child.mode,
-            child.statusTag,
-            child.remarks,
-            child.specialNeeds,
-            goalsText
+            child.name, child.group, child.schoolFullName, child.className,
+            child.teacher, child.fileNo, child.dob, child.tier,
+            child.mode, child.statusTag, child.remarks, child.specialNeeds, goalsText
           ].join(' ').toLowerCase();
-
           if (!searchable.includes(q)) return false;
         }
         return true;
       });
 
-      // 更新顯示統計與重設按鈕狀態
-      document.getElementById('filterResultCount').textContent = `顯示 ${filteredList.length} / ${childrenData.length} 位幼童`;
+      document.getElementById('filterResultCount').textContent = `共 ${filteredList.length} 人`;
       const hasActiveFilter = currentFilter.group !== 'ALL' || currentFilter.tier !== 'ALL' || currentFilter.mode !== 'ALL' || q !== '';
       document.getElementById('resetFiltersBtn').classList.toggle('hidden', !hasActiveFilter);
       document.getElementById('clearSearchBtn').classList.toggle('hidden', q === '');
@@ -1311,7 +1154,7 @@ function readDocText(file) {
       renderCardsGrid();
     }
 
-    // 渲染幼童名牌卡片
+    // 渲染極簡幼童名牌卡片
     function renderCardsGrid() {
       const grid = document.getElementById('cardsGrid');
       const emptyState = document.getElementById('emptyState');
@@ -1324,180 +1167,141 @@ function readDocText(file) {
       emptyState.classList.add('hidden');
 
       grid.innerHTML = filteredList.map(child => {
-        const gStyle = getGroupStyle(child.group);
-        const tierStyle = getTierStyle(child.tier);
-        const ageInfo = calculateAgeText(child.dob);
-
-        // 性別圖示與配色
-       const genderBadge = child.gender === '男'
-          ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">👦 男</span>'
-          : (child.gender === '女'
-              ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-50 text-pink-700 border border-pink-200">👧 女</span>'
-              : '');
-
-        // 特殊狀態標籤（插班生 / 退出）
-        let statusTagHtml = '';
-        if (child.statusTag === '插班生') {
-          statusTagHtml = '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-600 text-white shadow-sm">🌟 插班生</span>';
-        } else if (child.statusTag === '退出') {
-          statusTagHtml = '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-stone-500 text-white">已退出</span>';
-        }
-
-        // 訓練模式拆分為獨立小標籤
-        const modeBadges = (child.mode || '')
-          .split('/')
-          .filter(Boolean)
-          .map(m => `<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-cream-100 text-warm-700 border border-cream-300">${m}</span>`)
-          .join('');
-
-        // 學習目標範疇預覽標籤
-        const activeDomains = DOMAIN_META.filter(d => child.goals && child.goals[d.key] && child.goals[d.key].trim() !== '');
-        const domainBadgesHtml = activeDomains.map(d =>
-          `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${d.badgeClass}">${d.short}</span>`
-        ).join('');
-
-        // 流程表統計次數標籤
-        const flowStats = getChildTotalFlowchartStats(child);
-        const flowBadgeHtml = flowStats.sessionCount > 0
-          ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-teal-50 text-teal-800 border border-teal-200" title="已記錄 ${flowStats.sessionCount} 節流程表課堂，累計練習目標 ${flowStats.totalGoalHits} 次">📊 流程表: ${flowStats.sessionCount}節 (${flowStats.totalGoalHits}次)</span>`
+        const tierBadge = child.tier
+          ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold border shrink-0 ${getTierStyle(child.tier)}">${child.tier}</span>`
           : '';
 
-        const cardOpacity = child.statusTag === '退出' ? 'opacity-80 hover:opacity-100' : '';
+        const genderDot = child.gender === '男'
+          ? '<span class="text-xs text-sky-600 font-medium" title="男童">男</span>'
+          : (child.gender === '女' ? '<span class="text-xs text-rose-500 font-medium" title="女童">女</span>' : '');
+
+        let statusTagHtml = '';
+        if (child.statusTag === '插班生') {
+          statusTagHtml = '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">插班</span>';
+        } else if (child.statusTag === '退出') {
+          statusTagHtml = '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-stone-100 text-stone-500">已退</span>';
+        }
+
+        // 自動組合非空白的組別、班別與老師，無資料時自動隱藏不留橫線
+        const shortGroup = (child.group || '').replace('方換 — ', '');
+        const subInfoParts = [];
+        if (currentFilter.group === 'ALL' && shortGroup) subInfoParts.push(shortGroup);
+        if (child.className) subInfoParts.push(child.className);
+        if (child.teacher) subInfoParts.push(child.teacher);
+        const subInfoLine = subInfoParts.join(' · ');
+
+        const modeText = (child.mode || '').split(/[\/+]+/).map(s => s.trim()).filter(Boolean).join(' · ');
+        const flowStats = getChildTotalFlowchartStats(child);
+        const cardOpacity = child.statusTag === '退出' ? 'opacity-60 hover:opacity-100' : '';
 
         return `
           <article
             onclick="openProfileModal(${child.id})"
-            class="child-card bg-white rounded-2xl border border-cream-200 overflow-hidden shadow-sm flex flex-col justify-between cursor-pointer ${cardOpacity}"
+            class="child-card bg-white rounded-xl border border-stone-200 hover:border-stone-400 p-3.5 flex flex-col justify-between gap-2.5 cursor-pointer ${cardOpacity}"
           >
-            <!-- Top Accent Bar -->
-            <div>
-              <div class="h-2 w-full ${gStyle.topBar}"></div>
-
-              <div class="p-4 sm:p-5 space-y-3.5">
-                <!-- Group Badge & Tier Badge -->
-                <div class="flex items-center justify-between gap-2 flex-wrap">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold border ${gStyle.badge}">
-                    ${child.group}
-                  </span>
-                  <div class="flex items-center gap-1.5">
-                    ${flowBadgeHtml}
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold border ${tierStyle}">
-                      層級: ${child.tier || '待補充'}
-                    </span>
-                  </div>
+            <div class="space-y-1">
+              <div class="flex items-center justify-between gap-1.5">
+                <div class="flex items-baseline gap-1.5 min-w-0">
+                  <h3 class="text-base sm:text-lg font-bold text-stone-800 truncate">${child.name}</h3>
+                  ${genderDot}
+                  ${statusTagHtml}
                 </div>
-
-                <!-- Child Name, Gender & Status Tag -->
-                <div class="flex items-center justify-between gap-2 pt-0.5">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-xl font-bold text-warm-800 tracking-tight">${child.name}</h3>
-                    ${genderBadge}
-                    ${statusTagHtml}
-                  </div>
-                </div>
-
-                <!-- Class & Teacher Info -->
-                <div class="grid grid-cols-2 gap-2 bg-cream-50 rounded-xl p-2.5 border border-cream-200 text-xs">
-                  <div>
-                    <span class="text-warm-500 block">班別</span>
-                    <span class="font-bold text-warm-800">${child.className || '-'}</span>
-                  </div>
-                  <div>
-                    <span class="text-warm-500 block">負責老師</span>
-                    <span class="font-bold text-warm-800">${child.teacher || '-'}</span>
-                  </div>
-                </div>
-
-                <!-- DOB & Calculated Age -->
-                <div class="flex items-center justify-between text-xs pt-0.5">
-                  <span class="text-warm-600 font-medium">🎂 出生日期：</span>
-                  ${ageInfo.hasDob
-                    ? `<span class="font-semibold text-warm-800">${ageInfo.formattedDob} <span class="ml-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">(${ageInfo.ageBadge})</span></span>`
-                    : `<span class="text-warm-400 min-h-[1.25rem] inline-block"></span>`
-                  }
-                </div>
-
-                <!-- Special Needs Preview -->
-                ${child.specialNeeds ? `
-                  <div class="text-xs text-warm-700 bg-orange-50/60 border border-orange-200/80 rounded-xl p-2.5 line-clamp-2 leading-relaxed">
-                    <strong class="text-orange-900">🧩 特殊需要：</strong>${child.specialNeeds}
-                  </div>
-                ` : ''}
-
-                <!-- Training Modes & Active Goal Domains -->
-                <div class="space-y-2 pt-1">
-                  ${modeBadges ? `<div class="flex flex-wrap items-center gap-1.5"><span class="text-[11px] text-warm-500">訓練模式：</span>${modeBadges}</div>` : ''}
-                  ${domainBadgesHtml ? `<div class="flex flex-wrap items-center gap-1">${domainBadgesHtml}</div>` : ''}
-                </div>
+                ${tierBadge}
               </div>
+              ${subInfoLine ? `<p class="text-xs text-stone-500 truncate">${subInfoLine}</p>` : ''}
             </div>
 
-            <!-- Card Footer CTA -->
-            <div class="px-4 sm:px-5 py-2.5 bg-cream-50 border-t border-cream-200 flex items-center justify-between text-xs font-semibold text-amber-800">
-              <span>點擊查看完整檔案及目標統計</span>
-              <span>→</span>
-            </div>
+            ${(modeText || flowStats.sessionCount > 0) ? `
+              <div class="flex items-center justify-between gap-2 pt-2 border-t border-stone-100 text-[11px]">
+                <span class="text-stone-400 truncate">${modeText || ''}</span>
+                ${flowStats.sessionCount > 0
+                  ? `<span class="px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 font-medium shrink-0">${flowStats.sessionCount}節</span>`
+                  : ''}
+              </div>
+            ` : ''}
           </article>
         `;
       }).join('');
     }
 
+    // 點擊畫面空白處自動收起頂部「選單」
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('adminMenuDropdown');
+      if (menu && menu.hasAttribute('open') && !menu.contains(e.target)) {
+        menu.removeAttribute('open');
+      }
+    });
+
     // 格式化學習目標文字（將分號轉為條列，並將次範疇標籤、提示方式及流程表執行次數醒目上色）
+    let activeModalDomain = 'ALL';
+
+    function setModalDomainFilter(domainKey) {
+      activeModalDomain = domainKey;
+      const child = childrenData.find(c => c.id === activeModalChildId);
+      if (child) renderViewMode(child);
+    }
+
+    function toggleGoalSessions(btnEl) {
+      const li = btnEl.closest('li');
+      if (!li) return;
+      const panel = li.querySelector('.goal-sessions-panel');
+      if (panel) panel.classList.toggle('hidden');
+    }
+
+    // 格式化學習目標（僅對真正提示詞上色，並預設摺疊課堂日期明細）
     function formatGoalItemsHtml(goalText, childName = '') {
       if (!goalText || !goalText.trim()) return '';
-      const items = goalText
-        .split(/[；;\n]+/)
-        .map(s => s.trim())
-        .filter(Boolean);
+      const items = goalText.split(/[；;\n]+/).map(s => s.trim()).filter(Boolean);
 
       return `
-        <ul class="space-y-2.5">
+        <ul class="divide-y divide-stone-100">
           ${items.map(item => {
             const execStats = getGoalExecutionStats(childName, item);
-            const safeItemAttr = item.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const safeItemAttr = item.replace(/\\/g, '\\\\').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\r?\n/g, ' ');
 
-            // 將 [次範疇] 轉換為精緻小標籤，並將（口頭提示）、（視覺提示）等轉換為醒目色塊
             let formatted = item.replace(/\[([^\]]+)\]/g, (m, subCat) => {
-              return `<span class="inline-flex items-center px-2 py-0.5 mr-1.5 rounded-md text-xs font-bold bg-warm-800/10 text-warm-800 border border-warm-800/20">${subCat}</span>`;
-            });
-            const highlighted = formatted.replace(/（([^）]+)）|\(([^)]+)\)/g, (match, p1, p2) => {
-              const content = p1 || p2;
-              let pillColor = 'bg-amber-100 text-amber-900 border-amber-300';
-              if (content.includes('視覺')) pillColor = 'bg-indigo-100 text-indigo-900 border-indigo-300';
-              else if (content.includes('口頭')) pillColor = 'bg-emerald-100 text-emerald-900 border-emerald-300';
-              else if (content.includes('觸體') || content.includes('手勢')) pillColor = 'bg-rose-100 text-rose-900 border-rose-300';
-              return `<span class="inline-flex items-center px-2 py-0.5 mx-1 rounded-md text-xs font-semibold border ${pillColor}">${content}</span>`;
+              return `<span class="inline-flex items-center px-1.5 py-0.5 mr-1.5 rounded text-[11px] font-medium bg-stone-100 text-stone-600">${subCat}</span>`;
             });
 
-            // 流程表課堂日期明細小標籤
+            // 只對包含「提示 / 協助 / 承托 / 獨立」的括號上色，保留 (3次中2次) 等一般括號為純文字
+            const highlighted = formatted.replace(/（([^）]+)）|\(([^)]+)\)/g, (match, p1, p2) => {
+              const content = (p1 || p2 || '').trim();
+              if (!/提示|協助|承托|示範|獨立/.test(content)) return match;
+              let pillColor = 'bg-stone-100 text-stone-700 border-stone-200';
+              if (content.includes('視覺')) pillColor = 'bg-indigo-50 text-indigo-800 border-indigo-200';
+              else if (content.includes('口頭')) pillColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+              else if (/觸體|動作|手勢|承托/.test(content)) pillColor = 'bg-rose-50 text-rose-800 border-rose-200';
+              return `<span class="inline-flex items-center px-1.5 py-0.5 mx-1 rounded text-xs font-medium border ${pillColor}">${content}</span>`;
+            });
+
             const sessionPills = execStats.matchedSessions.map(s =>
-              `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-white/90 text-teal-900 border border-teal-200 shadow-2xs">${s.date} ${s.type}${s.progress && s.progress !== '待填' ? `(${s.progress})` : ''}</span>`
+              `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] bg-stone-100 text-stone-600">${s.date} ${s.type}${s.progress && s.progress !== '待填' ? ` (${s.progress})` : ''}</span>`
             ).join('');
 
-            const countBadgeColor = execStats.count > 0
-              ? 'bg-teal-600 text-white border-teal-700'
-              : 'bg-stone-200/80 text-stone-600 border-stone-300';
+            const countControl = execStats.count > 0
+              ? `<button type="button" onclick="toggleGoalSessions(this)" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 transition cursor-pointer" title="點擊展開或收起課堂日期">
+                   <span>${execStats.count} 次</span>
+                   <span class="text-[10px]">▾</span>
+                 </button>`
+              : `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-stone-100 text-stone-400">0 次</span>`;
 
             return `
-              <li class="p-2.5 rounded-xl bg-white/75 border border-black/5 space-y-1.5">
-                <div class="flex items-start justify-between gap-2">
-                  <div class="flex items-start gap-2 text-sm text-warm-800 leading-relaxed">
-                    <span class="text-amber-600 font-bold mt-0.5 select-none">•</span>
-                    <span class="flex-1">${highlighted}</span>
+              <li class="py-2.5 first:pt-0 last:pb-0 space-y-1.5">
+                <div class="flex items-start justify-between gap-2.5">
+                  <div class="text-sm text-stone-800 leading-relaxed flex-1">
+                    ${highlighted}
                   </div>
-                  <div class="flex items-center gap-1 shrink-0">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-bold border ${countBadgeColor}" title="流程表累計執行次數">
-                      ${execStats.count} 次
-                    </span>
+                  <div class="flex items-center gap-1 shrink-0 pt-0.5">
+                    ${countControl}
                     <button
                       type="button"
                       onclick="quickIncrementGoal('${childName}', '${safeItemAttr}')"
-                      class="w-6 h-6 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 text-xs font-bold flex items-center justify-center transition cursor-pointer"
-                      title="新增 1 次今日流程表訓練紀錄"
+                      class="w-6 h-6 rounded-md bg-stone-100 hover:bg-teal-50 text-stone-600 hover:text-teal-800 border border-stone-200 text-xs font-bold flex items-center justify-center transition cursor-pointer"
+                      title="新增 1 次今日訓練紀錄"
                     >+</button>
                   </div>
                 </div>
-                ${sessionPills ? `<div class="flex flex-wrap items-center gap-1 pl-4 pt-0.5"><span class="text-[11px] text-warm-500">流程表紀錄：</span>${sessionPills}</div>` : ''}
+                ${sessionPills ? `<div class="goal-sessions-panel hidden flex flex-wrap items-center gap-1.5 pt-1">${sessionPills}</div>` : ''}
               </li>
             `;
           }).join('')}
@@ -1505,9 +1309,9 @@ function readDocText(file) {
       `;
     }
 
-    // 開啟幼童個人檔案彈出視窗
     function openProfileModal(childId) {
       activeModalChildId = childId;
+      activeModalDomain = 'ALL';
       isEditMode = false;
       isCreatingNewChild = false;
       renderModalContent();
@@ -1515,7 +1319,6 @@ function readDocText(file) {
       document.body.style.overflow = 'hidden';
     }
 
-    // 關閉幼童個人檔案彈出視窗
     function closeProfileModal() {
       document.getElementById('profileModal').classList.add('hidden');
       document.body.style.overflow = '';
@@ -1524,7 +1327,6 @@ function readDocText(file) {
       isCreatingNewChild = false;
     }
 
-    // 在彈出視窗中切換上一位 / 下一位幼童
     function navigateModalChild(direction) {
       if (!filteredList.length || activeModalChildId === null) return;
       const currentIndex = filteredList.findIndex(c => c.id === activeModalChildId);
@@ -1536,7 +1338,6 @@ function readDocText(file) {
       renderModalContent();
     }
 
-    // 渲染彈出視窗內容（檢視模式與編輯模式）
     function renderModalContent() {
       const child = childrenData.find(c => c.id === activeModalChildId);
       if (!child && !isCreatingNewChild) return;
@@ -1551,7 +1352,7 @@ function readDocText(file) {
       if (isCreatingNewChild) {
         prevBtn.classList.add('hidden');
         nextBtn.classList.add('hidden');
-        indicator.textContent = '➕ 新增幼童檔案';
+        indicator.textContent = '新增幼童';
         toggleEditBtn.classList.add('hidden');
         viewContainer.classList.add('hidden');
         editForm.classList.remove('hidden');
@@ -1559,7 +1360,7 @@ function readDocText(file) {
           name: '',
           group: currentFilter.group !== 'ALL' ? currentFilter.group : '方換 — 下年名單',
           schoolFullName: '保良局方王換娣幼稚園 (SBM)',
-          gender: '女',
+          gender: '',
           fileNo: '',
           dob: '',
           className: '',
@@ -1579,132 +1380,127 @@ function readDocText(file) {
       toggleEditBtn.classList.remove('hidden');
 
       const idx = filteredList.findIndex(c => c.id === child.id);
-      indicator.textContent = idx !== -1 ? `${idx + 1} / ${filteredList.length}` : `ID #${child.id}`;
+      indicator.textContent = idx !== -1 ? `${idx + 1} / ${filteredList.length}` : `#${child.id}`;
 
       if (isEditMode) {
-        toggleEditBtn.innerHTML = '<span>👁️</span><span>返回檢視模式</span>';
+        toggleEditBtn.innerHTML = '<span>返回檢視</span>';
         viewContainer.classList.add('hidden');
         editForm.classList.remove('hidden');
         renderEditForm(child);
       } else {
-        toggleEditBtn.innerHTML = '<span>✏️</span><span>編輯資料</span>';
+        toggleEditBtn.innerHTML = '<span>✏️ 編輯</span>';
         editForm.classList.add('hidden');
         viewContainer.classList.remove('hidden');
         renderViewMode(child);
       }
     }
 
-    // 渲染檢視模式 HTML
+    // 渲染極簡檢視模式（自動隱藏空白欄、摺疊特殊需要、支援單一範疇切換）
     function renderViewMode(child) {
-      const gStyle = getGroupStyle(child.group);
-      const tierStyle = getTierStyle(child.tier);
       const ageInfo = calculateAgeText(child.dob);
-
       const activeDomains = DOMAIN_META.filter(d => child.goals && child.goals[d.key] && child.goals[d.key].trim() !== '');
+
+      if (activeModalDomain !== 'ALL' && !activeDomains.some(d => d.key === activeModalDomain)) {
+        activeModalDomain = 'ALL';
+      }
+
+      const visibleDomains = activeModalDomain === 'ALL'
+        ? activeDomains
+        : activeDomains.filter(d => d.key === activeModalDomain);
+
+      const genderPill = child.gender === '男'
+        ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">男童</span>'
+        : (child.gender === '女'
+            ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">女童</span>'
+            : '');
+
+      // 只收集非空白的行政欄位，徹底消除空白方框
+      const metaPills = [];
+      if (child.group) metaPills.push(child.group);
+      if (child.className) metaPills.push(`班別：${child.className}`);
+      if (child.teacher) metaPills.push(`老師：${child.teacher}`);
+      if (ageInfo.hasDob) metaPills.push(`生日：${ageInfo.formattedDob}${ageInfo.ageBadge ? ` (${ageInfo.ageBadge})` : ''}`);
+      if (child.mode) metaPills.push(`模式：${child.mode}`);
+      if (child.fileNo) metaPills.push(child.fileNo);
 
       const viewContainer = document.getElementById('modalViewContainer');
       viewContainer.innerHTML = `
-        <!-- 1. 頂部基本資料卡 -->
-        <div class="bg-white rounded-2xl border border-cream-200 p-5 sm:p-6 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-start justify-between gap-3 border-b border-cream-200 pb-4">
-            <div class="space-y-1.5">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold border ${gStyle.badge}">${child.group}</span>
-                ${child.fileNo ? `<span class="px-2.5 py-0.5 rounded-lg text-xs font-mono font-semibold bg-cream-100 text-warm-700 border border-cream-300">檔案編號：${child.fileNo}</span>` : ''}
-                ${child.statusTag === '插班生' ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-600 text-white">🌟 插班生</span>' : ''}
-                ${child.statusTag === '退出' ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-stone-500 text-white">已退出</span>' : ''}
-              </div>
-              <div class="flex items-center gap-3 pt-1">
-                <h2 class="text-2xl sm:text-3xl font-bold text-warm-800">${child.name}</h2>
-                ${child.gender === '男'
-                  ? '<span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-blue-50 text-blue-700 border border-blue-200">👦 男童</span>'
-                  : (child.gender === '女'
-                      ? '<span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-pink-50 text-pink-700 border border-pink-200">👧 女童</span>'
-                      : '')}
-              </div>
-              <p class="text-xs text-warm-500">${child.schoolFullName || child.group}</p>
-            </div>
-
+        <!-- 1. 精簡個人標題區 -->
+        <div class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex flex-wrap items-center gap-2">
-              <div class="px-3.5 py-2 rounded-xl border font-bold text-sm ${tierStyle}">
-                支援層級：${child.tier || '待補充'}
-              </div>
-              <div class="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-bold text-sm">
-                訓練模式：${child.mode || '待補充'}
-              </div>
+              <h2 class="text-2xl font-bold text-stone-800">${child.name}</h2>
+              ${genderPill}
+              ${child.statusTag === '插班生' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">插班生</span>' : ''}
+              ${child.statusTag === '退出' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-stone-100 text-stone-500">已退出</span>' : ''}
             </div>
+            ${child.tier ? `<span class="px-3 py-1 rounded-xl text-xs font-bold border ${getTierStyle(child.tier)}">層級 ${child.tier}</span>` : ''}
           </div>
 
-          <!-- 4格核心行政資訊 -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-            <div class="bg-cream-50 rounded-xl p-3 border border-cream-200">
-              <div class="text-xs text-warm-500">就讀班別</div>
-              <div class="text-base font-bold text-warm-800 mt-0.5 min-h-[1.5rem]">${child.className || ''}</div>
+          ${metaPills.length > 0 ? `
+            <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+              ${metaPills.map(p => `<span class="px-2.5 py-1 rounded-lg bg-stone-100 text-stone-700 text-xs font-medium">${p}</span>`).join('')}
             </div>
-            <div class="bg-cream-50 rounded-xl p-3 border border-cream-200">
-              <div class="text-xs text-warm-500">負責老師 / 班主任</div>
-              <div class="text-base font-bold text-warm-800 mt-0.5 min-h-[1.5rem]">${child.teacher || ''}</div>
-            </div>
-            <div class="bg-cream-50 rounded-xl p-3 border border-cream-200">
-              <div class="text-xs text-warm-500">出生日期</div>
-              <div class="text-base font-bold text-warm-800 mt-0.5 min-h-[1.5rem]">${ageInfo.formattedDob || ''}</div>
-            </div>
-            <div class="bg-cream-50 rounded-xl p-3 border border-cream-200">
-              <div class="text-xs text-warm-500">計算實齡 (2026年11月)</div>
-              <div class="text-base font-bold text-amber-800 mt-0.5 min-h-[1.5rem]">
-                ${ageInfo.ageBadge || ''}
-              </div>
-            </div>
-          </div>
+          ` : ''}
 
           ${child.remarks ? `
-            <div class="flex items-start gap-2 bg-amber-50/90 border border-amber-200 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-amber-900">
-              <span class="font-bold shrink-0">📌 排堂及特別備註：</span>
-              <span>${child.remarks}</span>
+            <div class="bg-amber-50/70 border border-amber-200/80 rounded-xl px-3.5 py-2 text-xs text-amber-900">
+              <strong class="font-semibold">備註：</strong>${child.remarks}
             </div>
           ` : ''}
         </div>
 
-        <!-- 2. 特殊需要 (Diagnosis) 區塊 -->
-        <div class="bg-white rounded-2xl border border-cream-200 p-5 sm:p-6 shadow-sm space-y-2.5">
-          <div class="flex items-center justify-between">
-            <h3 class="text-base sm:text-lg font-bold text-warm-800 flex items-center gap-2">
-              <span class="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center text-sm">🧩</span>
-              <span>特殊需要 (Diagnosis)</span>
-            </h3>
-            <span class="text-xs text-warm-500">整合自《傲翔計劃 - 學童資料 2026-2027》</span>
-          </div>
-          <div class="p-4 rounded-xl bg-cream-50 border border-cream-200 text-sm sm:text-base text-warm-800 leading-relaxed min-h-[3.5rem]">
-            ${child.specialNeeds ? child.specialNeeds : ''}
-          </div>
-        </div>
-
-        <!-- 3. 今期學習目標 (2026年9月 - 2027年2月 IEP) 與流程表統計 -->
-        <div class="space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2 px-1">
-            <h3 class="text-base sm:text-lg font-bold text-warm-800 flex items-center gap-2">
-              <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm">🎯</span>
-              <span>今期個別學習目標及流程表執行次數統計 (9月–11月)</span>
-            </h3>
-            <div class="flex flex-wrap items-center gap-1.5 text-xs text-warm-600">
-              <span class="px-2 py-0.5 rounded bg-teal-600 text-white font-bold">N 次 = 流程表累計次數 (點 + 可即時加1次)</span>
-              <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-semibold">口頭提示</span>
-              <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-900 font-semibold">視覺提示</span>
+        <!-- 2. 可摺疊特殊需要區塊（無資料時自動隱藏） -->
+        ${child.specialNeeds ? `
+          <details class="bg-white rounded-2xl border border-stone-200 px-4 py-3 group">
+            <summary class="list-none flex items-center justify-between text-xs sm:text-sm font-semibold text-stone-700 cursor-pointer select-none">
+              <span>🧩 特殊需要及診斷紀錄</span>
+              <span class="text-xs text-stone-400 group-open:rotate-180 transition-transform">▾</span>
+            </summary>
+            <div class="pt-2.5 mt-2.5 border-t border-stone-100 text-xs sm:text-sm text-stone-700 leading-relaxed">
+              ${child.specialNeeds}
             </div>
+          </details>
+        ` : ''}
+
+        <!-- 3. 今期學習目標與範疇快速切換 -->
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm sm:text-base font-bold text-stone-800">🎯 今期學習目標</h3>
+            ${activeDomains.length > 1 ? `
+              <div class="flex flex-wrap items-center gap-1">
+                <button
+                  type="button"
+                  onclick="setModalDomainFilter('ALL')"
+                  class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${activeModalDomain === 'ALL' ? 'bg-stone-800 text-white' : 'bg-stone-100 hover:bg-stone-200 text-stone-600'}"
+                >全部</button>
+                ${activeDomains.map(d => `
+                  <button
+                    type="button"
+                    onclick="setModalDomainFilter('${d.key}')"
+                    class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${activeModalDomain === d.key ? 'bg-stone-800 text-white' : 'bg-stone-100 hover:bg-stone-200 text-stone-600'}"
+                  >${d.short}</button>
+                `).join('')}
+              </div>
+            ` : ''}
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            ${activeDomains.length > 0 ? activeDomains.map(d => `
-              <div class="rounded-2xl border p-4 shadow-sm ${d.cardClass} space-y-2.5">
-                <div class="flex items-center justify-between border-b border-black/5 pb-2">
-                  <span class="font-bold text-sm sm:text-base text-warm-800">${d.label}</span>
+          ${visibleDomains.length > 0 ? `
+            <div class="grid grid-cols-1 ${activeModalDomain === 'ALL' ? 'md:grid-cols-2' : ''} gap-3">
+              ${visibleDomains.map(d => `
+                <div class="bg-white rounded-2xl border border-stone-200 p-4 space-y-2.5">
+                  <div class="font-bold text-sm text-stone-800 border-b border-stone-100 pb-2">
+                    ${d.label}
+                  </div>
+                  ${formatGoalItemsHtml(child.goals[d.key], child.name)}
                 </div>
-                ${formatGoalItemsHtml(child.goals[d.key], child.name)}
-              </div>
-            `).join('') : `
-              <div class="col-span-2 bg-white rounded-2xl border border-dashed border-cream-300 p-6 min-h-[4rem]"></div>
-            `}
-          </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div class="bg-white rounded-2xl border border-dashed border-stone-200 p-6 text-center text-xs text-stone-400">
+              暫未載入學習目標
+            </div>
+          `}
         </div>
       `;
     }
